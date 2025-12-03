@@ -56,3 +56,17 @@ export interface HeroContent {
   ctaSecondary: string;
   bgImage: string;
 }
+
+export interface AboutContent {
+  heroTitle: string;
+  heroDescription: string;
+  heroImage: string;
+  philosophyTitle: string;
+  philosophyDesc1: string;
+  philosophyDesc2: string;
+  philosophyImage: string;
+  statYears: string;
+  statProjects: string;
+  statSafeRate: string;
+  expertiseText: string;
+}

@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CompanyInfo, PortfolioItem, Inquiry, HeroContent, ServiceItem } from '../types';
+import { CompanyInfo, PortfolioItem, Inquiry, HeroContent, ServiceItem, AboutContent } from '../types';
 import { 
   COMPANY_INFO as INITIAL_COMPANY_INFO, 
   PORTFOLIO_ITEMS as INITIAL_PORTFOLIO,
   HERO_CONTENT_DEFAULT,
-  SERVICES_DEFAULT 
+  SERVICES_DEFAULT,
+  ABOUT_CONTENT_DEFAULT
 } from '../constants';
 
 interface AppContextType {
@@ -13,6 +14,9 @@ interface AppContextType {
   
   heroContent: HeroContent;
   updateHeroContent: (content: HeroContent) => void;
+
+  aboutContent: AboutContent;
+  updateAboutContent: (content: AboutContent) => void;
 
   services: ServiceItem[];
   updateServices: (services: ServiceItem[]) => void;
@@ -46,6 +50,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : HERO_CONTENT_DEFAULT;
   });
 
+  const [aboutContent, setAboutContent] = useState<AboutContent>(() => {
+    const saved = localStorage.getItem('da_about_content');
+    return saved ? JSON.parse(saved) : ABOUT_CONTENT_DEFAULT;
+  });
+
   const [services, setServices] = useState<ServiceItem[]>(() => {
     const saved = localStorage.getItem('da_services');
     return saved ? JSON.parse(saved) : SERVICES_DEFAULT;
@@ -68,6 +77,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Persist changes
   useEffect(() => localStorage.setItem('da_company_info', JSON.stringify(companyInfo)), [companyInfo]);
   useEffect(() => localStorage.setItem('da_hero_content', JSON.stringify(heroContent)), [heroContent]);
+  useEffect(() => localStorage.setItem('da_about_content', JSON.stringify(aboutContent)), [aboutContent]);
   useEffect(() => localStorage.setItem('da_services', JSON.stringify(services)), [services]);
   useEffect(() => localStorage.setItem('da_portfolio', JSON.stringify(portfolioItems)), [portfolioItems]);
   useEffect(() => localStorage.setItem('da_inquiries', JSON.stringify(inquiries)), [inquiries]);
@@ -76,6 +86,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Actions
   const updateCompanyInfo = (info: CompanyInfo) => setCompanyInfo(info);
   const updateHeroContent = (content: HeroContent) => setHeroContent(content);
+  const updateAboutContent = (content: AboutContent) => setAboutContent(content);
   const updateServices = (newServices: ServiceItem[]) => setServices(newServices);
 
   const addPortfolioItem = (item: PortfolioItem) => {
@@ -124,6 +135,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       companyInfo, updateCompanyInfo,
       heroContent, updateHeroContent,
+      aboutContent, updateAboutContent,
       services, updateServices,
       portfolioItems, addPortfolioItem, updatePortfolioItem, deletePortfolioItem,
       inquiries, addInquiry, updateInquiryStatus, deleteInquiry,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Inbox, LayoutGrid, Settings, Trash2, CheckCircle, Plus, Save, Home, Briefcase, ChevronRight } from 'lucide-react';
+import { LogOut, Inbox, LayoutGrid, Settings, Trash2, CheckCircle, Plus, Save, Home, Briefcase, ChevronRight, Info } from 'lucide-react';
 import { PortfolioItem, ServiceItem } from '../../types';
 
 const AdminPanel: React.FC = () => {
@@ -11,11 +11,12 @@ const AdminPanel: React.FC = () => {
     portfolioItems, addPortfolioItem, updatePortfolioItem, deletePortfolioItem,
     companyInfo, updateCompanyInfo,
     heroContent, updateHeroContent,
-    services, updateServices
+    services, updateServices,
+    aboutContent, updateAboutContent
   } = useApp();
   
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'inquiries' | 'hero' | 'services' | 'portfolio' | 'settings'>('inquiries');
+  const [activeTab, setActiveTab] = useState<'inquiries' | 'hero' | 'about' | 'services' | 'portfolio' | 'settings'>('inquiries');
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -71,6 +72,13 @@ const AdminPanel: React.FC = () => {
                 <Home size={20} className="mr-3" /> 메인 화면 관리
               </button>
 
+              <button 
+                onClick={() => setActiveTab('about')}
+                className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'about' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Info size={20} className="mr-3" /> 회사 소개 관리
+              </button>
+
                <button 
                 onClick={() => setActiveTab('services')}
                 className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'services' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
@@ -110,6 +118,9 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'hero' && (
               <HeroManager content={heroContent} onUpdate={updateHeroContent} />
             )}
+            {activeTab === 'about' && (
+              <AboutManager content={aboutContent} onUpdate={updateAboutContent} />
+            )}
             {activeTab === 'services' && (
               <ServicesManager services={services} onUpdate={updateServices} />
             )}
@@ -127,6 +138,154 @@ const AdminPanel: React.FC = () => {
 };
 
 // --- Sub Components for Admin Panel ---
+
+const AboutManager: React.FC<{ content: any, onUpdate: (content: any) => void }> = ({ content, onUpdate }) => {
+  const [formData, setFormData] = useState(content);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate(formData);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+      <h2 className="text-xl font-bold text-slate-800 mb-6">회사 소개(About) 페이지 관리</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Section 1: Header */}
+        <div className="border-b border-slate-100 pb-6">
+          <h3 className="font-bold text-blue-600 mb-4 text-sm uppercase">1. 상단 헤더 영역</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">페이지 제목</label>
+              <input 
+                value={formData.heroTitle} 
+                onChange={e => setFormData({...formData, heroTitle: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">소개 문구</label>
+              <textarea 
+                rows={2}
+                value={formData.heroDescription} 
+                onChange={e => setFormData({...formData, heroDescription: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">헤더 배경 이미지 URL</label>
+              <input 
+                value={formData.heroImage} 
+                onChange={e => setFormData({...formData, heroImage: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: Philosophy */}
+        <div className="border-b border-slate-100 pb-6">
+          <h3 className="font-bold text-blue-600 mb-4 text-sm uppercase">2. 경영 철학 (Philosophy)</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">철학 헤드라인</label>
+              <input 
+                value={formData.philosophyTitle} 
+                onChange={e => setFormData({...formData, philosophyTitle: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">설명 본문 1</label>
+              <textarea 
+                rows={3}
+                value={formData.philosophyDesc1} 
+                onChange={e => setFormData({...formData, philosophyDesc1: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">설명 본문 2</label>
+              <textarea 
+                rows={2}
+                value={formData.philosophyDesc2} 
+                onChange={e => setFormData({...formData, philosophyDesc2: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+             <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">철학 섹션 이미지 URL</label>
+              <input 
+                value={formData.philosophyImage} 
+                onChange={e => setFormData({...formData, philosophyImage: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Stats */}
+        <div className="border-b border-slate-100 pb-6">
+          <h3 className="font-bold text-blue-600 mb-4 text-sm uppercase">3. 주요 통계 수치</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">업력 (년)</label>
+              <input 
+                value={formData.statYears} 
+                onChange={e => setFormData({...formData, statYears: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">프로젝트 수</label>
+              <input 
+                value={formData.statProjects} 
+                onChange={e => setFormData({...formData, statProjects: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">사고율</label>
+              <input 
+                value={formData.statSafeRate} 
+                onChange={e => setFormData({...formData, statSafeRate: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Expertise */}
+        <div>
+           <h3 className="font-bold text-blue-600 mb-4 text-sm uppercase">4. 전문성 소개</h3>
+           <div>
+              <label className="block text-sm font-bold mb-1 text-slate-700">하단 전문성 상세 문구</label>
+              <textarea 
+                rows={4}
+                value={formData.expertiseText} 
+                onChange={e => setFormData({...formData, expertiseText: e.target.value})}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 flex items-center space-x-4">
+          <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold flex items-center hover:bg-blue-700 transition-colors shadow-sm">
+             <Save size={18} className="mr-2" /> 변경사항 저장
+          </button>
+          {showSuccess && (
+              <span className="text-green-600 text-sm font-bold flex items-center animate-pulse">
+                  <CheckCircle size={16} className="mr-1" /> 저장되었습니다.
+              </span>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+};
 
 const InquiryManager: React.FC<{ 
   inquiries: any[], 

@@ -1,5 +1,5 @@
 import { Building2, Ruler, ShieldCheck, Activity, HardHat, FileText } from 'lucide-react';
-import { NavItem, ServiceItem, PortfolioItem, CompanyInfo, HeroContent } from './types';
+import { NavItem, ServiceItem, PortfolioItem, CompanyInfo, HeroContent, AboutContent } from './types';
 
 export const COMPANY_INFO: CompanyInfo = {
   name: "디에이기술사사무소",
@@ -22,6 +22,20 @@ export const HERO_CONTENT_DEFAULT: HeroContent = {
   ctaPrimary: "프로젝트 문의하기",
   ctaSecondary: "실적 둘러보기",
   bgImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"
+};
+
+export const ABOUT_CONTENT_DEFAULT: AboutContent = {
+  heroTitle: "회사소개",
+  heroDescription: "정직한 기술력으로 건축물의 가치를 높이는 파트너,\n디에이기술사사무소입니다.",
+  heroImage: "https://picsum.photos/id/433/1920/600",
+  philosophyTitle: "\"안전은 타협의 대상이 아닙니다.\"",
+  philosophyDesc1: "디에이기술사사무소는 2010년 설립 이래, 수백 건의 구조 설계 및 안전 진단 프로젝트를 성공적으로 수행해왔습니다. 우리는 단순히 도면을 그리는 것이 아니라, 건축물이 직면할 수 있는 모든 물리적 위험을 예측하고 예방합니다.",
+  philosophyDesc2: "클라이언트에게는 최적의 경제성을, 사용자에게는 절대적인 안전을 제공하는 것. 이것이 기술사로서 우리가 지키는 불변의 원칙입니다.",
+  philosophyImage: "https://picsum.photos/id/1/800/600",
+  statYears: "15+",
+  statProjects: "500+",
+  statSafeRate: "100%",
+  expertiseText: "우리는 건축 구조 기술사(Professional Engineer) 자격을 보유한 전문가 집단입니다. 최신 내진 설계 기준(KDS 41)을 완벽히 숙지하며, MIDAS Gen 등 전문 해석 프로그램을 활용한 데이터 기반의 엔지니어링 서비스를 제공합니다. 복잡한 도심지 굴토 공사부터 초고층 빌딩까지, 어떤 난이도의 프로젝트도 해결할 수 있는 역량을 갖추고 있습니다."
 };
 
 export const SERVICES_DEFAULT: ServiceItem[] = [
