@@ -7,6 +7,7 @@ import {
   SERVICES_DEFAULT,
   ABOUT_CONTENT_DEFAULT
 } from '../constants';
+import { supabase } from '../src/lib/supabaseClient';
 
 interface AppContextType {
   companyInfo: CompanyInfo;
@@ -34,74 +35,146 @@ interface AppContextType {
   isAuthenticated: boolean;
   login: (password: string) => boolean;
   logout: () => void;
+  isLoading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize state from localStorage or constants
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(() => {
-    const saved = localStorage.getItem('da_company_info');
-    return saved ? JSON.parse(saved) : INITIAL_COMPANY_INFO;
-  });
-
-  const [heroContent, setHeroContent] = useState<HeroContent>(() => {
-    const saved = localStorage.getItem('da_hero_content');
-    return saved ? JSON.parse(saved) : HERO_CONTENT_DEFAULT;
-  });
-
-  const [aboutContent, setAboutContent] = useState<AboutContent>(() => {
-    const saved = localStorage.getItem('da_about_content');
-    return saved ? JSON.parse(saved) : ABOUT_CONTENT_DEFAULT;
-  });
-
-  const [services, setServices] = useState<ServiceItem[]>(() => {
-    const saved = localStorage.getItem('da_services');
-    return saved ? JSON.parse(saved) : SERVICES_DEFAULT;
-  });
-
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>(() => {
-    const saved = localStorage.getItem('da_portfolio');
-    return saved ? JSON.parse(saved) : INITIAL_PORTFOLIO;
-  });
-
-  const [inquiries, setInquiries] = useState<Inquiry[]>(() => {
-    const saved = localStorage.getItem('da_inquiries');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // State initialization with defaults
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(INITIAL_COMPANY_INFO);
+  const [heroContent, setHeroContent] = useState<HeroContent>(HERO_CONTENT_DEFAULT);
+  const [aboutContent, setAboutContent] = useState<AboutContent>(ABOUT_CONTENT_DEFAULT);
+  const [services, setServices] = useState<ServiceItem[]>(SERVICES_DEFAULT);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem('da_auth') === 'true';
   });
 
-  // Persist changes
-  useEffect(() => localStorage.setItem('da_company_info', JSON.stringify(companyInfo)), [companyInfo]);
-  useEffect(() => localStorage.setItem('da_hero_content', JSON.stringify(heroContent)), [heroContent]);
-  useEffect(() => localStorage.setItem('da_about_content', JSON.stringify(aboutContent)), [aboutContent]);
-  useEffect(() => localStorage.setItem('da_services', JSON.stringify(services)), [services]);
-  useEffect(() => localStorage.setItem('da_portfolio', JSON.stringify(portfolioItems)), [portfolioItems]);
-  useEffect(() => localStorage.setItem('da_inquiries', JSON.stringify(inquiries)), [inquiries]);
-  useEffect(() => localStorage.setItem('da_auth', String(isAuthenticated)), [isAuthenticated]);
+  // Fetch initial data from Supabase & Auto-Seed if empty
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
 
-  // Actions
-  const updateCompanyInfo = (info: CompanyInfo) => setCompanyInfo(info);
-  const updateHeroContent = (content: HeroContent) => setHeroContent(content);
-  const updateAboutContent = (content: AboutContent) => setAboutContent(content);
-  const updateServices = (newServices: ServiceItem[]) => setServices(newServices);
+        // 1. Hero Content Check
+        const { data: heroData } = await supabase.from('hero_content').select('*').single();
+        
+        // AUTO-SEEDING LOGIC:
+        // If hero data is missing OR it matches the barebones SQL placeholder ('기본 헤드라인'),
+        // we assume the DB is fresh and needs to be populated with our rich default content.
+        const needsSeeding = !heroData || heroData.headline === '기본 헤드라인';
 
-  const addPortfolioItem = (item: PortfolioItem) => {
+        if (needsSeeding) {
+          console.log("Database appears empty or default. Auto-seeding with rich content...");
+          
+          // Seed Hero
+          await supabase.from('hero_content').upsert({ id: 1, ...HERO_CONTENT_DEFAULT });
+          setHeroContent(HERO_CONTENT_DEFAULT);
+
+          // Seed Company Info
+          await supabase.from('company_info').upsert({ id: 1, ...INITIAL_COMPANY_INFO });
+          setCompanyInfo(INITIAL_COMPANY_INFO);
+
+          // Seed About Content
+          try {
+            await supabase.from('about_content').upsert({ id: 1, ...ABOUT_CONTENT_DEFAULT });
+            setAboutContent(ABOUT_CONTENT_DEFAULT);
+          } catch (e) { console.warn("About table might be missing", e); }
+
+          // Seed Services
+          for (const s of SERVICES_DEFAULT) {
+            await supabase.from('services').upsert(s);
+          }
+          setServices(SERVICES_DEFAULT);
+
+          // Seed Portfolio
+          for (const p of INITIAL_PORTFOLIO) {
+            await supabase.from('portfolio').upsert(p);
+          }
+          setPortfolioItems(INITIAL_PORTFOLIO);
+
+        } else {
+          // Normal Fetch - DB has data
+          setHeroContent(heroData);
+
+          const { data: companyData } = await supabase.from('company_info').select('*').single();
+          if (companyData) setCompanyInfo(companyData);
+
+          const { data: aboutData } = await supabase.from('about_content').select('*').single();
+          if (aboutData) setAboutContent(aboutData);
+
+          const { data: servicesData } = await supabase.from('services').select('*').order('id');
+          if (servicesData && servicesData.length > 0) setServices(servicesData);
+
+          const { data: portfolioData } = await supabase.from('portfolio').select('*');
+          if (portfolioData) setPortfolioItems(portfolioData);
+        }
+
+        // Always fetch inquiries
+        const { data: inquiryData } = await supabase.from('inquiries').select('*').order('date', { ascending: false });
+        if (inquiryData) setInquiries(inquiryData as Inquiry[]);
+
+      } catch (error) {
+        console.error('Error fetching data from Supabase:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Authentication persistence
+  useEffect(() => {
+    localStorage.setItem('da_auth', String(isAuthenticated));
+  }, [isAuthenticated]);
+
+
+  // --- Action Handlers (Update DB & State) ---
+
+  const updateCompanyInfo = async (info: CompanyInfo) => {
+    setCompanyInfo(info);
+    await supabase.from('company_info').upsert({ id: 1, ...info });
+  };
+
+  const updateHeroContent = async (content: HeroContent) => {
+    setHeroContent(content);
+    await supabase.from('hero_content').upsert({ id: 1, ...content });
+  };
+
+  const updateAboutContent = async (content: AboutContent) => {
+    setAboutContent(content);
+    await supabase.from('about_content').upsert({ id: 1, ...content });
+  };
+
+  const updateServices = async (newServices: ServiceItem[]) => {
+    setServices(newServices);
+    for (const service of newServices) {
+      await supabase.from('services').upsert(service);
+    }
+  };
+
+  const addPortfolioItem = async (item: PortfolioItem) => {
     setPortfolioItems(prev => [item, ...prev]);
+    await supabase.from('portfolio').insert(item);
   };
 
-  const updatePortfolioItem = (updatedItem: PortfolioItem) => {
+  const updatePortfolioItem = async (updatedItem: PortfolioItem) => {
     setPortfolioItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+    await supabase.from('portfolio').update(updatedItem).eq('id', updatedItem.id);
   };
 
-  const deletePortfolioItem = (id: string) => {
+  const deletePortfolioItem = async (id: string) => {
     setPortfolioItems(prev => prev.filter(item => item.id !== id));
+    await supabase.from('portfolio').delete().eq('id', id);
   };
 
-  const addInquiry = (data: Omit<Inquiry, 'id' | 'date' | 'status'>) => {
+  const addInquiry = async (data: Omit<Inquiry, 'id' | 'date' | 'status'>) => {
     const newInquiry: Inquiry = {
       ...data,
       id: Date.now().toString(),
@@ -109,18 +182,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'new'
     };
     setInquiries(prev => [newInquiry, ...prev]);
+    await supabase.from('inquiries').insert(newInquiry);
   };
 
-  const updateInquiryStatus = (id: string, status: Inquiry['status']) => {
+  const updateInquiryStatus = async (id: string, status: Inquiry['status']) => {
     setInquiries(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+    await supabase.from('inquiries').update({ status }).eq('id', id);
   };
 
-  const deleteInquiry = (id: string) => {
+  const deleteInquiry = async (id: string) => {
     setInquiries(prev => prev.filter(item => item.id !== id));
+    await supabase.from('inquiries').delete().eq('id', id);
   };
 
   const login = (password: string) => {
-    if (password === 'admin1234') { // Simple demo password
+    if (password === 'admin1234') { 
       setIsAuthenticated(true);
       return true;
     }
@@ -139,7 +215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       services, updateServices,
       portfolioItems, addPortfolioItem, updatePortfolioItem, deletePortfolioItem,
       inquiries, addInquiry, updateInquiryStatus, deleteInquiry,
-      isAuthenticated, login, logout
+      isAuthenticated, login, logout, isLoading
     }}>
       {children}
     </AppContext.Provider>

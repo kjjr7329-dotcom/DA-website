@@ -3,7 +3,10 @@ import { NavLink } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 
 const Footer: React.FC = () => {
-  const { companyInfo } = useApp();
+  const { companyInfo, inquiries } = useApp();
+
+  // Check if there are any unread ('new') inquiries
+  const hasNewInquiries = inquiries.some(inquiry => inquiry.status === 'new');
   
   return (
     <footer className="bg-slate-900 text-slate-400 py-10 border-t border-slate-800">
@@ -25,7 +28,15 @@ const Footer: React.FC = () => {
           {/* Utility Links */}
           <div className="flex items-center space-x-6 text-xs font-medium text-slate-600">
             <span className="hover:text-slate-300 cursor-pointer transition-colors">개인정보처리방침</span>
-            <NavLink to="/admin" className="hover:text-slate-300 transition-colors">관리자 로그인</NavLink>
+            <NavLink to="/admin" className="hover:text-slate-300 transition-colors flex items-center group">
+              관리자 로그인
+              {hasNewInquiries && (
+                <span className="ml-2 relative flex h-2.5 w-2.5" title="새로운 문의가 있습니다">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+              )}
+            </NavLink>
           </div>
         </div>
 
