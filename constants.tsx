@@ -1,5 +1,5 @@
 import { Building2, Ruler, ShieldCheck, Activity, HardHat, FileText } from 'lucide-react';
-import { NavItem, ServiceItem, PortfolioItem, CompanyInfo, HeroContent, AboutContent } from './types';
+import { NavItem, ServiceItem, PortfolioItem, CompanyInfo, HeroContent, AboutContent, WhyUsContent } from './types';
 
 export const COMPANY_INFO: CompanyInfo = {
   name: "디에이기술사사무소",
@@ -24,6 +24,28 @@ export const HERO_CONTENT_DEFAULT: HeroContent = {
   bgImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"
 };
 
+export const WHY_US_DEFAULT: WhyUsContent = {
+  title: "왜 DA기술사사무소인가?",
+  subtitle: "법적으로 공인된 최고의 기술 전문가 그룹이 귀하의 자산을 보호합니다.",
+  items: [
+    {
+      iconName: "Shield",
+      title: "공인된 법적 전문성",
+      description: "과학기술정보통신부에 등록된 정식 기술사사무소입니다. 법적 분쟁 시 강력한 근거가 되는 전문적인 자문을 제공합니다."
+    },
+    {
+      iconName: "CheckCircle",
+      title: "검증된 기술력 (T-5)",
+      description: "NICE평가정보로부터 '기술평가 우수기업 인증(T-5)'을 획득했습니다. 객관적으로 검증된 기술력으로 프로젝트를 리딩합니다."
+    },
+    {
+      iconName: "TrendingUp",
+      title: "확실한 비용 절감",
+      description: "투명한 원가 계산과 VE(Value Engineering) 검토를 통해 평균 10~15%의 실질적인 공사비 절감 효과를 보장합니다."
+    }
+  ]
+};
+
 export const ABOUT_CONTENT_DEFAULT: AboutContent = {
   heroTitle: "회사소개",
   heroDescription: "정직한 기술력으로 건축물의 가치를 높이는 파트너,\n디에이기술사사무소입니다.",
@@ -40,32 +62,37 @@ export const ABOUT_CONTENT_DEFAULT: AboutContent = {
 
 export const SERVICES_DEFAULT: ServiceItem[] = [
   {
-    id: 'struct-design',
-    title: "구조 설계 (Structural Design)",
-    description: "경제성과 안전성을 동시에 확보하는 최적의 구조 시스템을 제안합니다.",
-    details: ["초고층 건물 구조 설계", "특수 구조물 해석", "내진/제진 설계 최적화"],
-    iconName: "Building2"
-  },
-  {
-    id: 'safety-diag',
-    title: "정밀 안전 진단",
-    description: "건축물의 현재 상태를 과학적으로 분석하여 잠재적 위험을 제거합니다.",
-    details: ["구조 안전성 평가", "시설물 유지관리 진단", "보수/보강 설계"],
-    iconName: "ShieldCheck"
-  },
-  {
-    id: 've-consulting',
-    title: "VE (Value Engineering)",
-    description: "불필요한 공사비를 절감하고 성능을 극대화하는 가치 공학 솔루션.",
-    details: ["설계 단계별 VE", "시공성 향상 검토", "생애주기비용(LCC) 분석"],
-    iconName: "Activity"
-  },
-  {
-    id: 'tech-consulting',
-    title: "기술 자문 및 심의",
-    description: "복잡한 인허가 과정과 기술적 난제를 해결하는 전문가 자문 서비스.",
-    details: ["건축 심의 지원", "현장 기술 지원", "분쟁 해결 기술 자문"],
+    id: 'design-bid',
+    title: "설계 및 입찰 지원",
+    description: "투명하고 공정한 입찰을 위한 서류 작성 및 기술 지원",
+    details: [
+      "정확한 도면 및 시방서 작성",
+      "공사 물량 산출로 과다 비용 방지",
+      "독소조항 없는 투명한 계약 검토"
+    ],
     iconName: "FileText"
+  },
+  {
+    id: 'supervision',
+    title: "비상주 감리",
+    description: "시공 품질 확보를 위한 철저한 현장 관리 감독",
+    details: [
+      "설계 기준 준수 여부 관리 감독",
+      "정품 자재 사용 및 규격 확인",
+      "부당한 설계변경 및 비용증액 억제"
+    ],
+    iconName: "HardHat"
+  },
+  {
+    id: 'construction-fields',
+    title: "주요 공사 분야",
+    description: "아파트 및 공동주택 시설물 유지보수 전문 시공",
+    details: [
+      "재도장 및 균열보수 / 옥상방수",
+      "지하주차장 에폭시 / 지붕싱글",
+      "보도블럭 및 아스콘 포장 공사"
+    ],
+    iconName: "Building2"
   }
 ];
 
@@ -123,23 +150,5 @@ export const PORTFOLIO_ITEMS: PortfolioItem[] = [
     solution: "외부 프레임 보강 공법을 적용하여 내부 업무 중단 없이 공사 진행.",
     result: "내진 특등급 확보 및 건물 외관 디자인 개선 효과.",
     imageUrl: "https://picsum.photos/id/531/800/600"
-  }
-];
-
-export const WHY_US = [
-  {
-    title: "기술사 직접 수행",
-    description: "모든 프로젝트는 담당 기술사가 직접 검토하고 서명하여 책임을 집니다.",
-    icon: HardHat
-  },
-  {
-    title: "데이터 기반 엔지니어링",
-    description: "경험에만 의존하지 않고, 최신 해석 프로그램과 데이터로 입증합니다.",
-    icon: Ruler
-  },
-  {
-    title: "신속한 의사결정",
-    description: "복잡한 기술적 문제도 핵심을 파악하여 클라이언트의 시간을 아껴드립니다.",
-    icon: Activity
   }
 ];

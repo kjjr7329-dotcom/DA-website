@@ -57,6 +57,18 @@ export interface HeroContent {
   bgImage: string;
 }
 
+export interface WhyUsItem {
+  iconName: string;
+  title: string;
+  description: string;
+}
+
+export interface WhyUsContent {
+  title: string;
+  subtitle: string;
+  items: WhyUsItem[];
+}
+
 export interface AboutContent {
   heroTitle: string;
   heroDescription: string;

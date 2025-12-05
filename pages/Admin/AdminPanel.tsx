@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Inbox, LayoutGrid, Settings, Trash2, CheckCircle, Plus, Save, Home, Briefcase, ChevronRight, Info } from 'lucide-react';
-import { PortfolioItem, ServiceItem } from '../../types';
+import { LogOut, Inbox, LayoutGrid, Settings, Trash2, CheckCircle, Plus, Save, Home, Briefcase, ChevronRight, Info, Award } from 'lucide-react';
+import { PortfolioItem, ServiceItem, WhyUsContent } from '../../types';
 
 const AdminPanel: React.FC = () => {
   const { 
@@ -11,12 +11,13 @@ const AdminPanel: React.FC = () => {
     portfolioItems, addPortfolioItem, updatePortfolioItem, deletePortfolioItem,
     companyInfo, updateCompanyInfo,
     heroContent, updateHeroContent,
-    services, updateServices,
+    whyUsContent, updateWhyUsContent,
+    services, updateServices, addService, deleteService,
     aboutContent, updateAboutContent
   } = useApp();
   
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'inquiries' | 'hero' | 'about' | 'services' | 'portfolio' | 'settings'>('inquiries');
+  const [activeTab, setActiveTab] = useState<'inquiries' | 'hero' | 'whyus' | 'about' | 'services' | 'portfolio' | 'settings'>('inquiries');
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -69,7 +70,14 @@ const AdminPanel: React.FC = () => {
                 onClick={() => setActiveTab('hero')}
                 className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'hero' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
               >
-                <Home size={20} className="mr-3" /> 메인 화면 관리
+                <Home size={20} className="mr-3" /> 메인: 히어로 섹션
+              </button>
+
+              <button 
+                onClick={() => setActiveTab('whyus')}
+                className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'whyus' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Award size={20} className="mr-3" /> 메인: Why Us
               </button>
 
               <button 
@@ -118,11 +126,19 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'hero' && (
               <HeroManager content={heroContent} onUpdate={updateHeroContent} />
             )}
+            {activeTab === 'whyus' && (
+              <WhyUsManager content={whyUsContent} onUpdate={updateWhyUsContent} />
+            )}
             {activeTab === 'about' && (
               <AboutManager content={aboutContent} onUpdate={updateAboutContent} />
             )}
             {activeTab === 'services' && (
-              <ServicesManager services={services} onUpdate={updateServices} />
+              <ServicesManager 
+                 services={services} 
+                 onUpdate={updateServices} 
+                 onAdd={addService}
+                 onDelete={deleteService} 
+              />
             )}
             {activeTab === 'portfolio' && (
               <PortfolioManager items={portfolioItems} onAdd={addPortfolioItem} onUpdate={updatePortfolioItem} onDelete={deletePortfolioItem} />
@@ -138,6 +154,256 @@ const AdminPanel: React.FC = () => {
 };
 
 // --- Sub Components for Admin Panel ---
+
+const ServicesManager: React.FC<{ 
+  services: ServiceItem[], 
+  onUpdate: (items: ServiceItem[]) => void,
+  onAdd: (item: ServiceItem) => void,
+  onDelete: (id: string) => void
+}> = ({ services, onUpdate, onAdd, onDelete }) => {
+  const [items, setItems] = useState<ServiceItem[]>(services);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Sync state with props when props change (important for deletions via context)
+  useEffect(() => {
+    setItems(services);
+  }, [services]);
+
+  const handleChange = (index: number, field: keyof ServiceItem, value: any) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
+  const handleDetailChange = (serviceIndex: number, detailIndex: number, value: string) => {
+    const newItems = [...items];
+    newItems[serviceIndex].details[detailIndex] = value;
+    setItems(newItems);
+  };
+
+  const handleSave = () => {
+    onUpdate(items);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+  
+  const handleAddNew = () => {
+    const newItem: ServiceItem = {
+      id: `service-${Date.now()}`,
+      title: '새로운 기술 서비스',
+      description: '서비스에 대한 설명을 입력하세요.',
+      details: ['세부 항목 1', '세부 항목 2'],
+      iconName: 'Building2'
+    };
+    onAdd(newItem);
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('정말 삭제하시겠습니까?')) {
+      onDelete(id);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+      <div className="flex justify-between items-center mb-6">
+         <h2 className="text-xl font-bold text-slate-800">핵심 기술(Service) 콘텐츠 관리</h2>
+         <div className="flex items-center space-x-4">
+            {showSuccess && (
+                <span className="text-green-600 text-sm font-bold flex items-center animate-pulse">
+                    <CheckCircle size={16} className="mr-1" /> 저장됨
+                </span>
+            )}
+            <button onClick={handleAddNew} className="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold flex items-center hover:bg-slate-800 transition-colors shadow-sm text-sm">
+               <Plus size={16} className="mr-2" /> 서비스 추가
+            </button>
+            <button onClick={handleSave} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold flex items-center hover:bg-blue-700 transition-colors shadow-sm text-sm">
+               <Save size={16} className="mr-2" /> 전체 저장
+            </button>
+         </div>
+      </div>
+      
+      <div className="space-y-8">
+        {items.map((item, idx) => (
+          <div key={item.id} className="border border-slate-200 rounded-lg p-6 bg-slate-50 relative group">
+            <button 
+               onClick={() => handleDelete(item.id)}
+               className="absolute top-4 right-4 text-slate-400 hover:text-red-500 p-1 bg-white border border-slate-200 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+               title="삭제"
+            >
+               <Trash2 size={16} />
+            </button>
+
+            <h3 className="font-bold text-lg mb-4 flex items-center text-slate-700">
+              <span className="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">{idx + 1}</span>
+              {item.title}
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+               <div>
+                 <label className="block text-xs font-bold mb-1 text-slate-500">제목</label>
+                 <input 
+                    value={item.title}
+                    onChange={(e) => handleChange(idx, 'title', e.target.value)}
+                    className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+                 />
+               </div>
+               <div>
+                 <label className="block text-xs font-bold mb-1 text-slate-500">아이콘</label>
+                 <select 
+                    value={item.iconName}
+                    onChange={(e) => handleChange(idx, 'iconName', e.target.value)}
+                    className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none bg-white"
+                 >
+                   <option value="Building2">Building2 (건물)</option>
+                   <option value="ShieldCheck">ShieldCheck (방패/안전)</option>
+                   <option value="Activity">Activity (차트/효율)</option>
+                   <option value="HardHat">HardHat (안전모/시공)</option>
+                   <option value="FileText">FileText (문서/자문)</option>
+                   <option value="Shield">Shield (방패)</option>
+                   <option value="CheckCircle">CheckCircle (체크)</option>
+                   <option value="TrendingUp">TrendingUp (상승)</option>
+                 </select>
+               </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-xs font-bold mb-1 text-slate-500">설명</label>
+              <textarea 
+                rows={2}
+                value={item.description}
+                onChange={(e) => handleChange(idx, 'description', e.target.value)}
+                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold mb-1 text-slate-500">상세 항목 (목록)</label>
+              <div className="space-y-2">
+                 {item.details.map((detail, dIdx) => (
+                   <div key={dIdx} className="flex items-center">
+                     <ChevronRight size={16} className="text-slate-400 mr-2" />
+                     <input 
+                        value={detail}
+                        onChange={(e) => handleDetailChange(idx, dIdx, e.target.value)}
+                        className="flex-1 border border-slate-300 p-1.5 rounded focus:border-blue-500 outline-none text-sm"
+                     />
+                   </div>
+                 ))}
+              </div>
+            </div>
+          </div>
+        ))}
+        {items.length === 0 && (
+           <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl">
+              <p className="text-slate-400 mb-4">등록된 서비스가 없습니다.</p>
+              <button onClick={handleAddNew} className="text-blue-600 font-bold hover:underline">첫 서비스 추가하기</button>
+           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const WhyUsManager: React.FC<{ content: WhyUsContent, onUpdate: (content: WhyUsContent) => void }> = ({ content, onUpdate }) => {
+  const [formData, setFormData] = useState(content);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate(formData);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const handleItemChange = (index: number, field: keyof typeof formData.items[0], value: string) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setFormData({ ...formData, items: newItems });
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+      <h2 className="text-xl font-bold text-slate-800 mb-6">메인: Why Us 섹션 관리</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+          <div className="mb-4">
+             <label className="block text-sm font-bold mb-1 text-slate-700">섹션 제목</label>
+             <input 
+               value={formData.title} 
+               onChange={e => setFormData({...formData, title: e.target.value})}
+               className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+             />
+          </div>
+          <div>
+             <label className="block text-sm font-bold mb-1 text-slate-700">부연 설명 (서브타이틀)</label>
+             <textarea 
+               rows={2}
+               value={formData.subtitle} 
+               onChange={e => setFormData({...formData, subtitle: e.target.value})}
+               className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+             />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-bold text-blue-600 text-sm uppercase">3가지 핵심 가치 아이템</h3>
+          {formData.items.map((item, idx) => (
+            <div key={idx} className="border border-slate-200 rounded-lg p-4 bg-white">
+               <div className="flex justify-between items-center mb-3">
+                 <span className="font-bold text-slate-700 text-sm">카드 {idx + 1}</span>
+               </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                 <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-500">아이콘</label>
+                    <select 
+                      value={item.iconName}
+                      onChange={e => handleItemChange(idx, 'iconName', e.target.value)}
+                      className="w-full border border-slate-300 p-2 rounded text-sm focus:border-blue-500 outline-none bg-white"
+                    >
+                      <option value="Shield">Shield (방패/인증)</option>
+                      <option value="CheckCircle">CheckCircle (체크/완료)</option>
+                      <option value="TrendingUp">TrendingUp (상승/성과)</option>
+                      <option value="Activity">Activity (활동/차트)</option>
+                      <option value="HardHat">HardHat (안전모)</option>
+                    </select>
+                 </div>
+                 <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-500">제목</label>
+                    <input 
+                      value={item.title} 
+                      onChange={e => handleItemChange(idx, 'title', e.target.value)}
+                      className="w-full border border-slate-300 p-2 rounded text-sm focus:border-blue-500 outline-none"
+                    />
+                 </div>
+               </div>
+               <div>
+                  <label className="block text-xs font-bold mb-1 text-slate-500">설명 내용</label>
+                  <textarea 
+                    rows={2}
+                    value={item.description} 
+                    onChange={e => handleItemChange(idx, 'description', e.target.value)}
+                    className="w-full border border-slate-300 p-2 rounded text-sm focus:border-blue-500 outline-none"
+                  />
+               </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 flex items-center space-x-4">
+          <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold flex items-center hover:bg-blue-700 transition-colors shadow-sm">
+             <Save size={18} className="mr-2" /> 변경사항 저장
+          </button>
+          {showSuccess && (
+              <span className="text-green-600 text-sm font-bold flex items-center animate-pulse">
+                  <CheckCircle size={16} className="mr-1" /> 저장되었습니다.
+              </span>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+};
 
 const AboutManager: React.FC<{ content: any, onUpdate: (content: any) => void }> = ({ content, onUpdate }) => {
   const [formData, setFormData] = useState(content);
@@ -427,109 +693,6 @@ const HeroManager: React.FC<{ content: any, onUpdate: (content: any) => void }> 
           )}
         </div>
       </form>
-    </div>
-  );
-};
-
-const ServicesManager: React.FC<{ services: ServiceItem[], onUpdate: (items: ServiceItem[]) => void }> = ({ services, onUpdate }) => {
-  const [items, setItems] = useState<ServiceItem[]>(services);
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const handleChange = (index: number, field: keyof ServiceItem, value: any) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setItems(newItems);
-  };
-
-  const handleDetailChange = (serviceIndex: number, detailIndex: number, value: string) => {
-    const newItems = [...items];
-    newItems[serviceIndex].details[detailIndex] = value;
-    setItems(newItems);
-  };
-
-  const handleSave = () => {
-    onUpdate(items);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-      <div className="flex justify-between items-center mb-6">
-         <h2 className="text-xl font-bold text-slate-800">핵심 기술(Service) 콘텐츠 관리</h2>
-         <div className="flex items-center space-x-4">
-            {showSuccess && (
-                <span className="text-green-600 text-sm font-bold flex items-center animate-pulse">
-                    <CheckCircle size={16} className="mr-1" /> 저장됨
-                </span>
-            )}
-            <button onClick={handleSave} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold flex items-center hover:bg-blue-700 transition-colors shadow-sm">
-               <Save size={18} className="mr-2" /> 전체 저장
-            </button>
-         </div>
-      </div>
-      
-      <div className="space-y-8">
-        {items.map((item, idx) => (
-          <div key={item.id} className="border border-slate-200 rounded-lg p-6 bg-slate-50">
-            <h3 className="font-bold text-lg mb-4 flex items-center text-slate-700">
-              <span className="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">{idx + 1}</span>
-              {item.title}
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-               <div>
-                 <label className="block text-xs font-bold mb-1 text-slate-500">제목</label>
-                 <input 
-                    value={item.title}
-                    onChange={(e) => handleChange(idx, 'title', e.target.value)}
-                    className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
-                 />
-               </div>
-               <div>
-                 <label className="block text-xs font-bold mb-1 text-slate-500">아이콘 (Building2, ShieldCheck, Activity, HardHat, FileText)</label>
-                 <select 
-                    value={item.iconName}
-                    onChange={(e) => handleChange(idx, 'iconName', e.target.value)}
-                    className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none bg-white"
-                 >
-                   <option value="Building2">Building2 (건물)</option>
-                   <option value="ShieldCheck">ShieldCheck (방패/안전)</option>
-                   <option value="Activity">Activity (차트/효율)</option>
-                   <option value="HardHat">HardHat (안전모/시공)</option>
-                   <option value="FileText">FileText (문서/자문)</option>
-                 </select>
-               </div>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-xs font-bold mb-1 text-slate-500">설명</label>
-              <textarea 
-                rows={2}
-                value={item.description}
-                onChange={(e) => handleChange(idx, 'description', e.target.value)}
-                className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-xs font-bold mb-1 text-slate-500">상세 항목 (목록)</label>
-              <div className="space-y-2">
-                 {item.details.map((detail, dIdx) => (
-                   <div key={dIdx} className="flex items-center">
-                     <ChevronRight size={16} className="text-slate-400 mr-2" />
-                     <input 
-                        value={detail}
-                        onChange={(e) => handleDetailChange(idx, dIdx, e.target.value)}
-                        className="flex-1 border border-slate-300 p-1.5 rounded focus:border-blue-500 outline-none text-sm"
-                     />
-                   </div>
-                 ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

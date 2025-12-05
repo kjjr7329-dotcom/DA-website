@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Building2, ShieldCheck, Activity, HardHat, FileText, ChevronDown, Send, MapPin, Phone, Mail, HelpCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Building2, ShieldCheck, Activity, HardHat, FileText, ChevronDown, Send, MapPin, Phone, Mail, HelpCircle, Shield, TrendingUp } from 'lucide-react';
 import { PORTFOLIO_ITEMS } from '../constants';
 import { useApp } from '../contexts/AppContext';
 
 // Icon mapping helper
 const getIconComponent = (iconName: string) => {
   const icons: { [key: string]: any } = {
-    Building2, ShieldCheck, Activity, HardHat, FileText
+    Building2, ShieldCheck, Activity, HardHat, FileText, Shield, CheckCircle: CheckCircle2, TrendingUp
   };
   return icons[iconName] || HelpCircle;
 };
 
 const Home: React.FC = () => {
-  const { companyInfo, portfolioItems, heroContent, services, addInquiry } = useApp();
+  const { companyInfo, portfolioItems, heroContent, services, whyUsContent, addInquiry } = useApp();
   const [activeService, setActiveService] = useState(0);
 
   // Contact Form State
@@ -86,8 +86,8 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-slate-900/90 via-slate-900/60 to-slate-900"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="animate-fade-up-1 inline-block mb-6 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm">
-            <span className="text-blue-400 font-bold text-xs sm:text-sm tracking-[0.2em] uppercase">Professional Engineering Firm</span>
+          <div className="animate-fade-up-1 inline-block mb-6 px-6 py-2 rounded-full bg-blue-700/90 border border-blue-500/50 backdrop-blur-sm shadow-lg shadow-blue-900/30">
+            <span className="text-white font-bold text-sm sm:text-lg tracking-wide">공동주택 시설물 유지보수 전문</span>
           </div>
           
           <h1 className="animate-fade-up-2 text-4xl sm:text-5xl md:text-7xl font-black text-white mb-6 md:mb-8 leading-tight tracking-tight whitespace-pre-line drop-shadow-2xl">
@@ -119,15 +119,40 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. SERVICES SECTION - "What We Do" */}
-      <section className="py-16 md:py-24 bg-white relative">
+      {/* 2. WHY US SECTION - Added based on request */}
+      <section className="py-20 bg-white border-b border-slate-50">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">{whyUsContent.title}</h2>
+               <p className="text-slate-500 text-lg max-w-3xl mx-auto leading-relaxed">{whyUsContent.subtitle}</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               {whyUsContent.items.map((item, index) => {
+                 const Icon = getIconComponent(item.iconName);
+                 return (
+                   <div key={index} className="bg-slate-50 p-8 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
+                      <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                         <Icon size={28} strokeWidth={2} />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
+                      <p className="text-slate-600 leading-relaxed text-sm md:text-base">{item.description}</p>
+                   </div>
+                 );
+               })}
+            </div>
+         </div>
+      </section>
+
+      {/* 3. SERVICES SECTION - "What We Do" */}
+      <section className="py-16 md:py-24 bg-slate-50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-xs sm:text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Our Expertise</h2>
             <h3 className="text-3xl md:text-4xl font-bold text-slate-900">우리가 제공하는 핵심 기술</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {services.map((service, idx) => {
               const IconComponent = getIconComponent(service.iconName);
               return (
@@ -137,11 +162,11 @@ const Home: React.FC = () => {
                   className={`group p-6 md:p-8 rounded-2xl transition-all duration-300 border ${
                     activeService === idx 
                       ? 'bg-slate-900 text-white shadow-2xl md:scale-105 border-slate-900 z-10' 
-                      : 'bg-slate-50 text-slate-600 hover:bg-white border-slate-100'
+                      : 'bg-white text-slate-600 hover:bg-white border-slate-100'
                   }`}
                 >
                   <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-6 transition-colors ${
-                    activeService === idx ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 shadow-sm'
+                    activeService === idx ? 'bg-blue-600 text-white' : 'bg-slate-50 text-blue-600 shadow-sm'
                   }`}>
                     <IconComponent size={24} className="md:w-7 md:h-7" />
                   </div>
@@ -166,8 +191,8 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. PORTFOLIO SECTION - "Success Stories" */}
-      <section className="py-16 md:py-24 bg-slate-50">
+      {/* 4. PORTFOLIO SECTION - "Success Stories" */}
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 md:mb-12">
             <div className="text-center md:text-left w-full md:w-auto">
@@ -182,7 +207,7 @@ const Home: React.FC = () => {
           {/* Show 6 items (2 rows of 3) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {displayPortfolio.slice(0, 6).map((item) => (
-              <div key={item.id} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <div key={item.id} className="group bg-slate-50 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100">
                 <div className="relative h-56 md:h-64 overflow-hidden">
                   <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/40 transition-colors z-10 flex items-center justify-center">
                     <span className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all text-white font-bold border border-white px-6 py-2 rounded-full">
@@ -219,10 +244,10 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. CONTACT SECTION - Integrated Form */}
-      <section id="contact" className="py-16 md:py-24 bg-white relative overflow-hidden">
+      {/* 5. CONTACT SECTION - Integrated Form */}
+      <section id="contact" className="py-16 md:py-24 bg-slate-50 relative overflow-hidden">
         {/* Decorative elements */}
-        <div className="hidden lg:block absolute top-0 right-0 w-1/2 h-full bg-slate-50 -skew-x-12 transform translate-x-20 z-0"></div>
+        <div className="hidden lg:block absolute top-0 right-0 w-1/2 h-full bg-slate-100 -skew-x-12 transform translate-x-20 z-0"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
@@ -237,7 +262,7 @@ const Home: React.FC = () => {
               </p>
 
               <div className="space-y-6 mb-10 max-w-md mx-auto lg:mx-0 text-left">
-                <div className="flex items-center group bg-slate-50 lg:bg-transparent p-4 lg:p-0 rounded-xl lg:rounded-none">
+                <div className="flex items-center group bg-white lg:bg-transparent p-4 lg:p-0 rounded-xl lg:rounded-none shadow-sm lg:shadow-none">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4 md:mr-5 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
                     <Phone size={20} />
                   </div>
@@ -246,7 +271,7 @@ const Home: React.FC = () => {
                     <p className="text-lg md:text-xl font-bold text-slate-900">{companyInfo.phone}</p>
                   </div>
                 </div>
-                <div className="flex items-center group bg-slate-50 lg:bg-transparent p-4 lg:p-0 rounded-xl lg:rounded-none">
+                <div className="flex items-center group bg-white lg:bg-transparent p-4 lg:p-0 rounded-xl lg:rounded-none shadow-sm lg:shadow-none">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4 md:mr-5 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
                     <Mail size={20} />
                   </div>
@@ -255,7 +280,7 @@ const Home: React.FC = () => {
                     <p className="text-lg md:text-xl font-bold text-slate-900 truncate">{companyInfo.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center group bg-slate-50 lg:bg-transparent p-4 lg:p-0 rounded-xl lg:rounded-none">
+                <div className="flex items-center group bg-white lg:bg-transparent p-4 lg:p-0 rounded-xl lg:rounded-none shadow-sm lg:shadow-none">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-4 md:mr-5 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
                     <MapPin size={20} />
                   </div>

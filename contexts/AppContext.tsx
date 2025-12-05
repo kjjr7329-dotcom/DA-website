@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CompanyInfo, PortfolioItem, Inquiry, HeroContent, ServiceItem, AboutContent } from '../types';
+import { CompanyInfo, PortfolioItem, Inquiry, HeroContent, ServiceItem, AboutContent, WhyUsContent } from '../types';
 import { 
   COMPANY_INFO as INITIAL_COMPANY_INFO, 
   PORTFOLIO_ITEMS as INITIAL_PORTFOLIO,
   HERO_CONTENT_DEFAULT,
   SERVICES_DEFAULT,
-  ABOUT_CONTENT_DEFAULT
+  ABOUT_CONTENT_DEFAULT,
+  WHY_US_DEFAULT
 } from '../constants';
 import { supabase } from '../src/lib/supabaseClient';
 
@@ -16,11 +17,16 @@ interface AppContextType {
   heroContent: HeroContent;
   updateHeroContent: (content: HeroContent) => void;
 
+  whyUsContent: WhyUsContent;
+  updateWhyUsContent: (content: WhyUsContent) => void;
+
   aboutContent: AboutContent;
   updateAboutContent: (content: AboutContent) => void;
 
   services: ServiceItem[];
+  addService: (service: ServiceItem) => void;
   updateServices: (services: ServiceItem[]) => void;
+  deleteService: (id: string) => void;
 
   portfolioItems: PortfolioItem[];
   addPortfolioItem: (item: PortfolioItem) => void;
@@ -46,6 +52,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // State initialization with defaults
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(INITIAL_COMPANY_INFO);
   const [heroContent, setHeroContent] = useState<HeroContent>(HERO_CONTENT_DEFAULT);
+  const [whyUsContent, setWhyUsContent] = useState<WhyUsContent>(WHY_US_DEFAULT);
   const [aboutContent, setAboutContent] = useState<AboutContent>(ABOUT_CONTENT_DEFAULT);
   const [services, setServices] = useState<ServiceItem[]>(SERVICES_DEFAULT);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>(INITIAL_PORTFOLIO);
@@ -65,42 +72,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const { data: heroData } = await supabase.from('hero_content').select('*').single();
         
         // AUTO-SEEDING LOGIC:
-        // If hero data is missing OR it matches the barebones SQL placeholder ('기본 헤드라인'),
-        // we assume the DB is fresh and needs to be populated with our rich default content.
         const needsSeeding = !heroData || heroData.headline === '기본 헤드라인';
 
         if (needsSeeding) {
           console.log("Database appears empty or default. Auto-seeding with rich content...");
           
-          // Seed Hero
           await supabase.from('hero_content').upsert({ id: 1, ...HERO_CONTENT_DEFAULT });
           setHeroContent(HERO_CONTENT_DEFAULT);
+          
+          await supabase.from('why_us').upsert({ id: 1, ...WHY_US_DEFAULT });
+          setWhyUsContent(WHY_US_DEFAULT);
 
-          // Seed Company Info
           await supabase.from('company_info').upsert({ id: 1, ...INITIAL_COMPANY_INFO });
           setCompanyInfo(INITIAL_COMPANY_INFO);
 
-          // Seed About Content
           try {
             await supabase.from('about_content').upsert({ id: 1, ...ABOUT_CONTENT_DEFAULT });
             setAboutContent(ABOUT_CONTENT_DEFAULT);
           } catch (e) { console.warn("About table might be missing", e); }
 
-          // Seed Services
           for (const s of SERVICES_DEFAULT) {
             await supabase.from('services').upsert(s);
           }
           setServices(SERVICES_DEFAULT);
 
-          // Seed Portfolio
           for (const p of INITIAL_PORTFOLIO) {
             await supabase.from('portfolio').upsert(p);
           }
           setPortfolioItems(INITIAL_PORTFOLIO);
 
         } else {
-          // Normal Fetch - DB has data
+          // Normal Fetch
           setHeroContent(heroData);
+
+          const { data: whyUsData } = await supabase.from('why_us').select('*').single();
+          if (whyUsData) setWhyUsContent(whyUsData);
 
           const { data: companyData } = await supabase.from('company_info').select('*').single();
           if (companyData) setCompanyInfo(companyData);
@@ -115,7 +121,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (portfolioData) setPortfolioItems(portfolioData);
         }
 
-        // Always fetch inquiries
         const { data: inquiryData } = await supabase.from('inquiries').select('*').order('date', { ascending: false });
         if (inquiryData) setInquiries(inquiryData as Inquiry[]);
 
@@ -147,9 +152,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await supabase.from('hero_content').upsert({ id: 1, ...content });
   };
 
+  const updateWhyUsContent = async (content: WhyUsContent) => {
+    setWhyUsContent(content);
+    await supabase.from('why_us').upsert({ id: 1, ...content });
+  };
+
   const updateAboutContent = async (content: AboutContent) => {
     setAboutContent(content);
     await supabase.from('about_content').upsert({ id: 1, ...content });
+  };
+
+  const addService = async (service: ServiceItem) => {
+    setServices(prev => [...prev, service]);
+    await supabase.from('services').upsert(service);
   };
 
   const updateServices = async (newServices: ServiceItem[]) => {
@@ -157,6 +172,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     for (const service of newServices) {
       await supabase.from('services').upsert(service);
     }
+  };
+
+  const deleteService = async (id: string) => {
+    setServices(prev => prev.filter(item => item.id !== id));
+    await supabase.from('services').delete().eq('id', id);
   };
 
   const addPortfolioItem = async (item: PortfolioItem) => {
@@ -211,8 +231,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       companyInfo, updateCompanyInfo,
       heroContent, updateHeroContent,
+      whyUsContent, updateWhyUsContent,
       aboutContent, updateAboutContent,
-      services, updateServices,
+      services, addService, updateServices, deleteService,
       portfolioItems, addPortfolioItem, updatePortfolioItem, deletePortfolioItem,
       inquiries, addInquiry, updateInquiryStatus, deleteInquiry,
       isAuthenticated, login, logout, isLoading
