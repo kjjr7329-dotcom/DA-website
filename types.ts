@@ -82,3 +82,12 @@ export interface AboutContent {
   statSafeRate: string;
   expertiseText: string;
 }
+
+export interface HomeSectionsContent {
+  portfolioTitle: string;
+  portfolioHeadline: string;
+  portfolioDescription: string;
+  contactTitle: string;
+  contactHeadline: string;
+  contactDescription: string;
+}

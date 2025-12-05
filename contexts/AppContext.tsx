@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CompanyInfo, PortfolioItem, Inquiry, HeroContent, ServiceItem, AboutContent, WhyUsContent } from '../types';
+import { CompanyInfo, PortfolioItem, Inquiry, HeroContent, ServiceItem, AboutContent, WhyUsContent, HomeSectionsContent } from '../types';
 import { 
   COMPANY_INFO as INITIAL_COMPANY_INFO, 
   PORTFOLIO_ITEMS as INITIAL_PORTFOLIO,
   HERO_CONTENT_DEFAULT,
   SERVICES_DEFAULT,
   ABOUT_CONTENT_DEFAULT,
-  WHY_US_DEFAULT
+  WHY_US_DEFAULT,
+  HOME_SECTIONS_DEFAULT
 } from '../constants';
 import { supabase } from '../src/lib/supabaseClient';
 
@@ -16,6 +17,9 @@ interface AppContextType {
   
   heroContent: HeroContent;
   updateHeroContent: (content: HeroContent) => void;
+
+  homeSectionsContent: HomeSectionsContent;
+  updateHomeSectionsContent: (content: HomeSectionsContent) => void;
 
   whyUsContent: WhyUsContent;
   updateWhyUsContent: (content: WhyUsContent) => void;
@@ -52,6 +56,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // State initialization with defaults
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(INITIAL_COMPANY_INFO);
   const [heroContent, setHeroContent] = useState<HeroContent>(HERO_CONTENT_DEFAULT);
+  const [homeSectionsContent, setHomeSectionsContent] = useState<HomeSectionsContent>(HOME_SECTIONS_DEFAULT);
   const [whyUsContent, setWhyUsContent] = useState<WhyUsContent>(WHY_US_DEFAULT);
   const [aboutContent, setAboutContent] = useState<AboutContent>(ABOUT_CONTENT_DEFAULT);
   const [services, setServices] = useState<ServiceItem[]>(SERVICES_DEFAULT);
@@ -80,6 +85,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           await supabase.from('hero_content').upsert({ id: 1, ...HERO_CONTENT_DEFAULT });
           setHeroContent(HERO_CONTENT_DEFAULT);
           
+          await supabase.from('home_sections').upsert({ id: 1, ...HOME_SECTIONS_DEFAULT });
+          setHomeSectionsContent(HOME_SECTIONS_DEFAULT);
+          
           await supabase.from('why_us').upsert({ id: 1, ...WHY_US_DEFAULT });
           setWhyUsContent(WHY_US_DEFAULT);
 
@@ -104,6 +112,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } else {
           // Normal Fetch
           setHeroContent(heroData);
+
+          const { data: homeSectionsData } = await supabase.from('home_sections').select('*').single();
+          if (homeSectionsData) setHomeSectionsContent(homeSectionsData);
 
           const { data: whyUsData } = await supabase.from('why_us').select('*').single();
           if (whyUsData) setWhyUsContent(whyUsData);
@@ -150,6 +161,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateHeroContent = async (content: HeroContent) => {
     setHeroContent(content);
     await supabase.from('hero_content').upsert({ id: 1, ...content });
+  };
+
+  const updateHomeSectionsContent = async (content: HomeSectionsContent) => {
+    setHomeSectionsContent(content);
+    await supabase.from('home_sections').upsert({ id: 1, ...content });
   };
 
   const updateWhyUsContent = async (content: WhyUsContent) => {
@@ -231,6 +247,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       companyInfo, updateCompanyInfo,
       heroContent, updateHeroContent,
+      homeSectionsContent, updateHomeSectionsContent,
       whyUsContent, updateWhyUsContent,
       aboutContent, updateAboutContent,
       services, addService, updateServices, deleteService,

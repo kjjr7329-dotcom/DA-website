@@ -13,7 +13,7 @@ const getIconComponent = (iconName: string) => {
 };
 
 const Home: React.FC = () => {
-  const { companyInfo, portfolioItems, heroContent, services, whyUsContent, addInquiry } = useApp();
+  const { companyInfo, portfolioItems, heroContent, services, whyUsContent, homeSectionsContent, addInquiry } = useApp();
   const [activeService, setActiveService] = useState(0);
 
   // Contact Form State
@@ -196,8 +196,9 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 md:mb-12">
             <div className="text-center md:text-left w-full md:w-auto">
-              <h2 className="text-xs sm:text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Selected Works</h2>
-              <h3 className="text-3xl md:text-4xl font-bold text-slate-900">주요 수행 실적</h3>
+              <h2 className="text-xs sm:text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">{homeSectionsContent.portfolioTitle}</h2>
+              <h3 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{homeSectionsContent.portfolioHeadline}</h3>
+              <p className="text-slate-500 text-base leading-relaxed whitespace-pre-line">{homeSectionsContent.portfolioDescription}</p>
             </div>
             <NavLink to="/portfolio" className="hidden md:flex items-center text-slate-900 font-bold hover:text-blue-600 transition-colors mt-4 md:mt-0">
               전체 포트폴리오 보기 <ArrowRight className="ml-2" size={20} />
@@ -254,11 +255,10 @@ const Home: React.FC = () => {
             
             {/* Left: Info */}
             <div className="text-center lg:text-left">
-              <h2 className="text-xs sm:text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">Contact Us</h2>
-              <h3 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">상담 신청</h3>
-              <p className="text-base md:text-lg text-slate-600 mb-8 md:mb-10 leading-relaxed">
-                구조 안전 진단, 내진 설계, VE 제안 등<br className="hidden sm:block"/>
-                건축 기술과 관련된 모든 고민을 해결해 드립니다.
+              <h2 className="text-xs sm:text-sm font-bold text-blue-600 tracking-widest uppercase mb-2">{homeSectionsContent.contactTitle}</h2>
+              <h3 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">{homeSectionsContent.contactHeadline}</h3>
+              <p className="text-base md:text-lg text-slate-600 mb-8 md:mb-10 leading-relaxed whitespace-pre-line">
+                {homeSectionsContent.contactDescription}
               </p>
 
               <div className="space-y-6 mb-10 max-w-md mx-auto lg:mx-0 text-left">

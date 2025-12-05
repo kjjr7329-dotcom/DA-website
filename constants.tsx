@@ -1,5 +1,5 @@
 import { Building2, Ruler, ShieldCheck, Activity, HardHat, FileText } from 'lucide-react';
-import { NavItem, ServiceItem, PortfolioItem, CompanyInfo, HeroContent, AboutContent, WhyUsContent } from './types';
+import { NavItem, ServiceItem, PortfolioItem, CompanyInfo, HeroContent, AboutContent, WhyUsContent, HomeSectionsContent } from './types';
 
 export const COMPANY_INFO: CompanyInfo = {
   name: "디에이기술사사무소",
@@ -22,6 +22,15 @@ export const HERO_CONTENT_DEFAULT: HeroContent = {
   ctaPrimary: "프로젝트 문의하기",
   ctaSecondary: "실적 둘러보기",
   bgImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"
+};
+
+export const HOME_SECTIONS_DEFAULT: HomeSectionsContent = {
+  portfolioTitle: "Selected Works",
+  portfolioHeadline: "주요 수행 실적",
+  portfolioDescription: "디에이기술사사무소가 보유한 최고의 기술력으로 완성한 대표 프로젝트입니다.\n구조적 난제를 해결하고 최상의 안전을 확보한 사례를 확인해보세요.",
+  contactTitle: "Contact Us",
+  contactHeadline: "상담 신청",
+  contactDescription: "구조 안전 진단, 내진 설계, VE 제안 등\n건축 기술과 관련된 모든 고민을 해결해 드립니다."
 };
 
 export const WHY_US_DEFAULT: WhyUsContent = {

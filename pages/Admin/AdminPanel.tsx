@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Inbox, LayoutGrid, Settings, Trash2, CheckCircle, Plus, Save, Home, Briefcase, ChevronRight, Info, Award } from 'lucide-react';
-import { PortfolioItem, ServiceItem, WhyUsContent } from '../../types';
+import { LogOut, Inbox, LayoutGrid, Settings, Trash2, CheckCircle, Plus, Save, Home, Briefcase, ChevronRight, Info, Award, Type } from 'lucide-react';
+import { PortfolioItem, ServiceItem, WhyUsContent, HomeSectionsContent } from '../../types';
 
 const AdminPanel: React.FC = () => {
   const { 
@@ -12,12 +12,13 @@ const AdminPanel: React.FC = () => {
     companyInfo, updateCompanyInfo,
     heroContent, updateHeroContent,
     whyUsContent, updateWhyUsContent,
+    homeSectionsContent, updateHomeSectionsContent,
     services, updateServices, addService, deleteService,
     aboutContent, updateAboutContent
   } = useApp();
   
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'inquiries' | 'hero' | 'whyus' | 'about' | 'services' | 'portfolio' | 'settings'>('inquiries');
+  const [activeTab, setActiveTab] = useState<'inquiries' | 'hero' | 'sections' | 'whyus' | 'about' | 'services' | 'portfolio' | 'settings'>('inquiries');
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -74,6 +75,13 @@ const AdminPanel: React.FC = () => {
               </button>
 
               <button 
+                onClick={() => setActiveTab('sections')}
+                className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'sections' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Type size={20} className="mr-3" /> 메인: 섹션 텍스트
+              </button>
+
+              <button 
                 onClick={() => setActiveTab('whyus')}
                 className={`w-full flex items-center p-3 rounded-lg transition-colors ${activeTab === 'whyus' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
               >
@@ -126,6 +134,9 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'hero' && (
               <HeroManager content={heroContent} onUpdate={updateHeroContent} />
             )}
+            {activeTab === 'sections' && (
+              <HomeSectionsManager content={homeSectionsContent} onUpdate={updateHomeSectionsContent} />
+            )}
             {activeTab === 'whyus' && (
               <WhyUsManager content={whyUsContent} onUpdate={updateWhyUsContent} />
             )}
@@ -154,6 +165,113 @@ const AdminPanel: React.FC = () => {
 };
 
 // --- Sub Components for Admin Panel ---
+
+const HomeSectionsManager: React.FC<{ content: HomeSectionsContent, onUpdate: (content: HomeSectionsContent) => void }> = ({ content, onUpdate }) => {
+  const [formData, setFormData] = useState(content);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdate(formData);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+      <h2 className="text-xl font-bold text-slate-800 mb-6">메인: 섹션 텍스트 관리</h2>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
+        {/* Portfolio Section */}
+        <div className="bg-slate-50 p-6 rounded-lg border border-slate-100">
+           <div className="flex items-center mb-4">
+              <LayoutGrid className="text-blue-600 mr-2" size={20} />
+              <h3 className="font-bold text-lg text-slate-800">1. 주요 실적 섹션 (Portfolio)</h3>
+           </div>
+           <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold mb-1 text-slate-700">소제목 (영문/작은 글씨)</label>
+                <input 
+                  value={formData.portfolioTitle} 
+                  onChange={e => setFormData({...formData, portfolioTitle: e.target.value})}
+                  className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+                  placeholder="예: Selected Works"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1 text-slate-700">메인 제목 (큰 글씨)</label>
+                <input 
+                  value={formData.portfolioHeadline} 
+                  onChange={e => setFormData({...formData, portfolioHeadline: e.target.value})}
+                  className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+                  placeholder="예: 주요 수행 실적"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1 text-slate-700">부연 설명 (아래 설명글)</label>
+                <textarea 
+                  rows={2}
+                  value={formData.portfolioDescription} 
+                  onChange={e => setFormData({...formData, portfolioDescription: e.target.value})}
+                  className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+                  placeholder="실적 섹션에 표시될 설명 문구를 입력하세요."
+                />
+              </div>
+           </div>
+        </div>
+
+        {/* Contact Section */}
+        <div className="bg-slate-50 p-6 rounded-lg border border-slate-100">
+           <div className="flex items-center mb-4">
+              <Inbox className="text-blue-600 mr-2" size={20} />
+              <h3 className="font-bold text-lg text-slate-800">2. 상담 신청 섹션 (Contact)</h3>
+           </div>
+           <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold mb-1 text-slate-700">소제목 (영문/작은 글씨)</label>
+                <input 
+                  value={formData.contactTitle} 
+                  onChange={e => setFormData({...formData, contactTitle: e.target.value})}
+                  className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+                  placeholder="예: Contact Us"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1 text-slate-700">메인 제목 (큰 글씨)</label>
+                <input 
+                  value={formData.contactHeadline} 
+                  onChange={e => setFormData({...formData, contactHeadline: e.target.value})}
+                  className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+                  placeholder="예: 상담 신청"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1 text-slate-700">상세 안내 문구</label>
+                <textarea 
+                  rows={3}
+                  value={formData.contactDescription} 
+                  onChange={e => setFormData({...formData, contactDescription: e.target.value})}
+                  className="w-full border border-slate-300 p-2 rounded focus:border-blue-500 outline-none"
+                  placeholder="문의 섹션에 표시될 상세 안내 문구를 입력하세요."
+                />
+              </div>
+           </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 flex items-center space-x-4">
+          <button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold flex items-center hover:bg-blue-700 transition-colors shadow-sm">
+             <Save size={18} className="mr-2" /> 변경사항 저장
+          </button>
+          {showSuccess && (
+              <span className="text-green-600 text-sm font-bold flex items-center animate-pulse">
+                  <CheckCircle size={16} className="mr-1" /> 저장되었습니다.
+              </span>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+};
 
 const ServicesManager: React.FC<{ 
   services: ServiceItem[], 
