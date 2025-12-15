@@ -9,7 +9,7 @@ import {
   WHY_US_DEFAULT,
   HOME_SECTIONS_DEFAULT
 } from '../constants';
-import { supabase } from '../src/lib/supabaseClient';
+import { supabase } from "../lib/supabaseClient";
 
 interface AppContextType {
   companyInfo: CompanyInfo;
