@@ -14,11 +14,8 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  
-  // [NEW] 세련된 로그인을 위한 상태 변수
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
-
+  const [showLoginModal, setShowLoginModal] = useState(false); // 로그인 모달 상태
+  const [passwordInput, setPasswordInput] = useState(""); // 비밀번호 입력 상태
   const [activeTab, setActiveTab] = useState<'edit' | 'messages'>('edit');
 
   // --- 데이터 상태 ---
@@ -74,18 +71,10 @@ export default function Home() {
     } catch (e) { console.error(e); }
   };
 
-  const fetchConsultations = async () => {
-    const { data } = await supabase.from('consultations').select('*').order('created_at', { ascending: false });
-    if (data) setConsultations(data);
-  };
-
-  // --- [수정된 저장 로직] 모든 테이블을 확실하게 업데이트 ---
   const handleSaveChanges = async () => {
     if (!infoId) return;
     if (!window.confirm("모든 변경사항을 저장하시겠습니까?")) return;
-
     try {
-      // 1. 기본 정보 저장
       await supabase.from('site_info').update({
         company_name: companyName,
         hero_badge: heroData.badge,
@@ -98,31 +87,9 @@ export default function Home() {
         address: contactInfo.address
       }).eq('id', infoId);
       
-      // 2. 포트폴리오 저장
-      for (const item of portfolioData) {
-        await supabase.from('portfolio').update({ 
-          title: item.title, 
-          category: item.category, 
-          result: item.result 
-        }).eq('id', item.id);
-      }
-
-      // 3. '왜 DA인가'(About) 섹션 저장 (이 부분이 중요!)
-      for (const item of aboutData) {
-        await supabase.from('about_section').update({ 
-          title: item.title, 
-          description: item.description 
-        }).eq('id', item.id);
-      }
-
-      // 4. '핵심 기술'(Service) 섹션 저장 (이 부분도 중요!)
-      for (const item of serviceData) {
-        await supabase.from('service_section').update({ 
-          title: item.title, 
-          description: item.description, 
-          details: item.details 
-        }).eq('id', item.id);
-      }
+      for (const item of portfolioData) await supabase.from('portfolio').update({ title: item.title, category: item.category, result: item.result }).eq('id', item.id);
+      for (const item of aboutData) await supabase.from('about_section').update({ title: item.title, description: item.description }).eq('id', item.id);
+      for (const item of serviceData) await supabase.from('service_section').update({ title: item.title, description: item.description, details: item.details }).eq('id', item.id);
       
       alert("✅ 모든 섹션이 완벽하게 저장되었습니다!");
       setIsEditMode(false);
@@ -151,7 +118,7 @@ export default function Home() {
 
   const triggerUpload = (type: string, id?: number) => { setUploadTarget({ type, id }); fileInputRef.current?.click(); };
   
-  // [NEW] 관리자 로그인 처리
+  // [NEW] 관리자 로그인 처리 (모달에서 입력받음)
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordInput === "1234") {
@@ -164,11 +131,12 @@ export default function Home() {
     }
   };
 
+  // [수정됨] 톱니바퀴 클릭 시 -> 옛날 prompt는 삭제하고, 새 모달창만 띄움!
   const toggleEditMode = () => { 
     if (isEditMode) {
       setIsEditMode(false); 
     } else {
-      setShowLoginModal(true); // 기존 prompt 대신 모달 띄우기
+      setShowLoginModal(true); 
     }
   };
 
@@ -181,30 +149,32 @@ export default function Home() {
     <div className="w-full overflow-hidden font-sans text-gray-900 bg-white relative">
       <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
 
-      {/* --- [NEW] 세련된 관리자 로그인 모달 --- */}
+      {/* [NEW] 세련된 관리자 로그인 모달 */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm relative overflow-hidden">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm relative overflow-hidden animate-scale-in">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-900 to-yellow-500"></div>
-            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-900">
-                <Lock size={32} />
+            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition transform hover:rotate-90"><X size={24} /></button>
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-900 shadow-inner">
+                <Lock size={40} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">관리자 접속</h2>
-              <p className="text-sm text-gray-500 mt-1">인가된 사용자만 접근 가능합니다.</p>
+              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">관리자 접속</h2>
+              <p className="text-sm text-gray-500 mt-2 font-medium">인가된 사용자만 접근 가능합니다.</p>
             </div>
-            <form onSubmit={handleAdminLogin} className="space-y-4">
-              <input 
-                type="password" 
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="비밀번호를 입력하세요" 
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent outline-none transition"
-                autoFocus
-              />
-              <button type="submit" className="w-full py-3 bg-blue-900 text-white font-bold rounded-lg hover:bg-blue-800 transition shadow-lg flex items-center justify-center gap-2">
-                접속하기 <LogIn size={18} />
+            <form onSubmit={handleAdminLogin} className="space-y-6">
+              <div>
+                <input 
+                  type="password" 
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="비밀번호를 입력하세요" 
+                  className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-lg placeholder-gray-400"
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-900 to-blue-700 text-white font-bold rounded-xl hover:from-blue-800 hover:to-blue-600 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-lg tracking-wide active:scale-95">
+                접속하기 <LogIn size={20} />
               </button>
             </form>
           </div>
