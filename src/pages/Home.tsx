@@ -18,7 +18,7 @@ export default function Home() {
 
   // --- 데이터 상태 ---
   const [infoId, setInfoId] = useState<number | null>(null);
-  const [companyName, setCompanyName] = useState("DA기술사사무소"); // 기본값 띄어쓰기 제거
+  const [companyName, setCompanyName] = useState("DA기술사사무소");
   const [logoImg, setLogoImg] = useState<string | null>(null);
   const [heroData, setHeroData] = useState(DEFAULT_HERO);
   
@@ -155,18 +155,25 @@ export default function Home() {
         {isMenuOpen && <div className="md:hidden bg-blue-950 border-t border-white/10 p-4 space-y-4 flex flex-col">{['홈', '회사소개', '기술소개', '실적', '상담신청'].map((t, i) => <a key={i} href={`#${['hero', 'services', 'about', 'portfolio', 'contact'][i]}`} onClick={() => setIsMenuOpen(false)} className="hover:text-yellow-400">{t}</a>)}</div>}
       </nav>
 
-      {/* 1. 메인 배너 */}
+      {/* 1. 메인 배너 (수정: 모바일 폰트 크기 조정 및 줄바꿈 최적화) */}
       <section id="hero" className="relative h-screen flex items-center justify-center bg-blue-900 overflow-hidden">
         <div className={`absolute inset-0 z-0 transition-transform duration-[10s] ease-out ${isVisible ? 'scale-110' : 'scale-100'}`}><img src={heroData.bg} alt="bg" className="w-full h-full object-cover opacity-40"/></div>
         {isEditMode && <button onClick={() => triggerUpload('hero')} className="absolute top-24 right-6 z-30 bg-white/90 text-blue-900 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 hover:bg-white"><Camera size={18} /> 배경 변경</button>}
         <div className="absolute inset-0 bg-gradient-to-t from-blue-950/80 via-transparent to-transparent z-10"></div>
         <div className={`relative z-20 container mx-auto px-6 text-center text-white transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-          {isEditMode ? (<div className="flex flex-col items-center w-full"><input type="text" value={heroData.badge} onChange={(e) => setHeroData({...heroData, badge: e.target.value})} className="bg-white/90 text-black text-center text-sm font-medium mb-4 rounded px-2 w-64 shadow-lg"/><textarea value={heroData.title} onChange={(e) => setHeroData({...heroData, title: e.target.value})} className="bg-white/90 text-black text-center text-4xl md:text-6xl lg:text-7xl font-bold mb-4 rounded w-full max-w-4xl shadow-lg" rows={2}/><textarea value={heroData.desc} onChange={(e) => setHeroData({...heroData, desc: e.target.value})} className="bg-white/90 text-black text-center text-lg md:text-xl rounded w-full max-w-2xl shadow-lg" rows={3}/></div>) : (<><div className="inline-block px-4 py-1 border border-yellow-500/50 rounded-full text-yellow-400 text-sm mb-6 animate-pulse font-medium tracking-wider">{heroData.badge}</div><h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 whitespace-pre-line leading-tight drop-shadow-lg">{heroData.title}</h1><p className="text-lg md:text-xl text-gray-200 mb-10 whitespace-pre-line max-w-2xl mx-auto leading-relaxed">{heroData.desc}</p></>)}
+          {isEditMode ? (<div className="flex flex-col items-center w-full"><input type="text" value={heroData.badge} onChange={(e) => setHeroData({...heroData, badge: e.target.value})} className="bg-white/90 text-black text-center text-sm font-medium mb-4 rounded px-2 w-64 shadow-lg"/><textarea value={heroData.title} onChange={(e) => setHeroData({...heroData, title: e.target.value})} className="bg-white/90 text-black text-center text-4xl md:text-6xl lg:text-7xl font-bold mb-4 rounded w-full max-w-4xl shadow-lg" rows={2}/><textarea value={heroData.desc} onChange={(e) => setHeroData({...heroData, desc: e.target.value})} className="bg-white/90 text-black text-center text-lg md:text-xl rounded w-full max-w-2xl shadow-lg" rows={3}/></div>) : (
+            <>
+              <div className="inline-block px-4 py-1 border border-yellow-500/50 rounded-full text-yellow-400 text-sm mb-6 animate-pulse font-medium tracking-wider">{heroData.badge}</div>
+              {/* [수정 포인트] text-4xl -> text-3xl로 줄이고, word-break: keep-all (break-keep) 추가 */}
+              <h1 className="text-3xl md:text-6xl lg:text-7xl font-bold mb-6 whitespace-pre-line leading-tight drop-shadow-lg break-keep">{heroData.title}</h1>
+              <p className="text-lg md:text-xl text-gray-200 mb-10 whitespace-pre-line max-w-2xl mx-auto leading-relaxed break-keep">{heroData.desc}</p>
+            </>
+          )}
           <div className="flex justify-center gap-4 mt-8"><a href="#contact" className="px-8 py-4 bg-yellow-500 text-blue-900 font-bold rounded-lg hover:bg-yellow-400 shadow-xl">무료 상담 신청하기</a></div>
         </div>
       </section>
 
-      {/* 2. 회사소개 */}
+      {/* 2. 회사소개 (수정: 설명 글자 크기 키움 text-sm -> text-base) */}
       <section id="services" className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-left mb-16 border-l-4 border-yellow-500 pl-6"><h2 className="text-3xl md:text-4xl font-bold mb-3 text-blue-950">왜 {companyName}인가?</h2><p className="text-gray-600">법적으로 공인된 최고의 기술 전문가 그룹이 귀하의 자산을 보호합니다.</p></div>
@@ -174,7 +181,13 @@ export default function Home() {
             {aboutData.map((item) => (
               <div key={item.id} className="p-8 bg-slate-50 rounded-2xl border border-slate-100 relative group">
                 <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm mb-6 relative">{item.icon_img ? <img src={item.icon_img} alt="icon" className="w-8 h-8 object-contain"/> : <Shield className="w-7 h-7 text-blue-900" />}{isEditMode && <button onClick={() => triggerUpload('about', item.id)} className="absolute -bottom-2 -right-2 bg-black/50 text-white rounded-full p-1"><Camera size={10}/></button>}</div>
-                {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-xl mb-2 bg-white border p-1"/><textarea value={item.description} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full text-sm text-gray-600 bg-white border p-1" rows={3}/><button onClick={() => deleteItem('about_section', item.id, setAboutData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (<><h3 className="text-xl font-bold mb-3 text-gray-900">{item.title}</h3><p className="text-gray-600 leading-relaxed whitespace-pre-line text-sm">{item.description}</p></>)}
+                {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-xl mb-2 bg-white border p-1"/><textarea value={item.description} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full text-sm text-gray-600 bg-white border p-1" rows={3}/><button onClick={() => deleteItem('about_section', item.id, setAboutData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (
+                  <>
+                    <h3 className="text-xl font-bold mb-3 text-gray-900">{item.title}</h3>
+                    {/* [수정 포인트] text-sm 삭제하고 text-base(기본 크기)로 변경 */}
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-line text-base">{item.description}</p>
+                  </>
+                )}
               </div>
             ))}
             {isEditMode && <button onClick={() => addItem('about_section', { title: '새 항목', description: '내용 입력' }, setAboutData)} className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-500"><Plus size={32}/> 항목 추가</button>}
@@ -226,7 +239,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- [세련된 푸터] "관리자 로그인" 글씨 삭제, 깔끔한 정리 --- */}
+      {/* 푸터 */}
       <footer className="bg-slate-900 text-slate-300 py-12 border-t border-slate-800 text-sm">
         <div className="container mx-auto px-6">
            <div className="flex flex-col md:flex-row justify-between items-center mb-8">
