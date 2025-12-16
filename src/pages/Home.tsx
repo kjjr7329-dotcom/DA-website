@@ -14,7 +14,7 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false); // 로그인 모달
+  const [showLoginModal, setShowLoginModal] = useState(false); // 로그인 모달 상태
   const [passwordInput, setPasswordInput] = useState("");
   const [activeTab, setActiveTab] = useState<'edit' | 'messages'>('edit');
 
@@ -35,7 +35,7 @@ export default function Home() {
   const [portfolioData, setPortfolioData] = useState<any[]>([]);
   const [aboutData, setAboutData] = useState<any[]>([]);
   const [serviceData, setServiceData] = useState<any[]>([]);
-  const [consultations, setConsultations] = useState<any[]>([]); // 상담 데이터
+  const [consultations, setConsultations] = useState<any[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,8 +67,6 @@ export default function Home() {
       const { data: pf } = await supabase.from('portfolio').select('*').order('id'); if (pf) setPortfolioData(pf);
       const { data: ab } = await supabase.from('about_section').select('*').order('sort_order'); if (ab) setAboutData(ab);
       const { data: sv } = await supabase.from('service_section').select('*').order('sort_order'); if (sv) setServiceData(sv);
-      
-      // 상담 내역 불러오기 (알림 배지용)
       fetchConsultations();
     } catch (e) { console.error(e); }
   };
@@ -80,7 +78,7 @@ export default function Home() {
 
   const handleSaveChanges = async () => {
     if (!infoId) return;
-    if (!window.confirm("저장하시겠습니까?")) return;
+    if (!window.confirm("모든 변경사항을 저장하시겠습니까?")) return;
     try {
       await supabase.from('site_info').update({
         company_name: companyName,
@@ -98,9 +96,9 @@ export default function Home() {
       for (const item of aboutData) await supabase.from('about_section').update({ title: item.title, description: item.description }).eq('id', item.id);
       for (const item of serviceData) await supabase.from('service_section').update({ title: item.title, description: item.description, details: item.details }).eq('id', item.id);
       
-      alert("✅ 저장 완료!");
+      alert("✅ 모든 섹션이 완벽하게 저장되었습니다!");
       setIsEditMode(false);
-    } catch (e) { alert("저장 실패: " + e); }
+    } catch (e) { alert("저장 중 오류 발생: " + e); }
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,19 +123,20 @@ export default function Home() {
 
   const triggerUpload = (type: string, id?: number) => { setUploadTarget({ type, id }); fileInputRef.current?.click(); };
   
-  // 로그인 함수
+  // [NEW] 관리자 로그인 처리
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordInput === "1234") {
       setIsEditMode(true);
       setShowLoginModal(false);
       setPasswordInput("");
-      setActiveTab('messages'); // 로그인하자마자 메시지함 보여주기
+      setActiveTab('messages');
     } else {
-      alert("비밀번호 불일치");
+      alert("비밀번호가 일치하지 않습니다.");
     }
   };
 
+  // [확실한] 모달 띄우기 함수
   const toggleEditMode = () => { 
     if (isEditMode) setIsEditMode(false); 
     else setShowLoginModal(true); 
@@ -152,19 +151,30 @@ export default function Home() {
     <div className="w-full overflow-hidden font-sans text-gray-900 bg-white relative">
       <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
 
-      {/* 세련된 로그인 모달 */}
+      {/* [NEW] 더 세련된 다크 글래스 로그인 모달 */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm relative overflow-hidden animate-scale-in">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-900 to-yellow-500"></div>
-            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
+        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-sm relative overflow-hidden animate-scale-in text-white backdrop-blur-sm">
+            <button onClick={() => setShowLoginModal(false)} className="absolute top-5 right-5 text-white/70 hover:text-white transition transform hover:rotate-90"><X size={24} /></button>
             <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-900 shadow-inner"><Lock size={40} /></div>
-              <h2 className="text-3xl font-extrabold text-gray-900">관리자 접속</h2>
+              <div className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Lock size={36} className="text-white" />
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight">관리자 접속</h2>
+              <p className="text-sm text-blue-200 mt-2">Authorized Personnel Only</p>
             </div>
             <form onSubmit={handleAdminLogin} className="space-y-6">
-              <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="비밀번호" className="w-full px-5 py-4 border rounded-xl focus:ring-4 focus:ring-blue-100 outline-none text-lg" autoFocus />
-              <button type="submit" className="w-full py-4 bg-blue-900 text-white font-bold rounded-xl hover:bg-blue-800 transition-all shadow-lg flex items-center justify-center gap-3 text-lg">접속하기 <LogIn size={20} /></button>
+              <input 
+                type="password" 
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Password" 
+                className="w-full px-5 py-4 bg-white/10 border border-white/30 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition-all text-lg text-center placeholder-white/50 text-white"
+                autoFocus
+              />
+              <button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg hover:shadow-blue-500/50 flex items-center justify-center gap-3 text-lg tracking-wide active:scale-95">
+                접속하기 <LogIn size={20} />
+              </button>
             </form>
           </div>
         </div>
@@ -211,34 +221,53 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 회사소개 */}
+      {/* [NEW 디자인] 2. 회사소개 (이미지 꽉 채우기) */}
       <section id="services" className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-left mb-16 border-l-4 border-yellow-500 pl-6"><h2 className="text-3xl md:text-4xl font-bold mb-3 text-blue-950">왜 {companyName}인가?</h2><p className="text-gray-600">법적으로 공인된 최고의 기술 전문가 그룹이 귀하의 자산을 보호합니다.</p></div>
           <div className="grid md:grid-cols-3 gap-8">
             {aboutData.map((item) => (
-              <div key={item.id} className="p-8 bg-slate-50 rounded-2xl border border-slate-100 relative group">
-                <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm mb-6 relative">{item.icon_img ? <img src={item.icon_img} alt="icon" className="w-8 h-8 object-contain"/> : <Shield className="w-7 h-7 text-blue-900" />}{isEditMode && <button onClick={() => triggerUpload('about', item.id)} className="absolute -bottom-2 -right-2 bg-black/50 text-white rounded-full p-1"><Camera size={10}/></button>}</div>
-                {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-xl mb-2 bg-white border p-1"/><textarea value={item.description} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full text-sm text-gray-600 bg-white border p-1" rows={3}/><button onClick={() => deleteItem('about_section', item.id, setAboutData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (<><h3 className="text-xl font-bold mb-3 text-gray-900">{item.title}</h3><p className="text-gray-600 leading-relaxed whitespace-pre-line text-base">{item.description}</p></>)}
+              <div key={item.id} className="bg-slate-50 rounded-2xl border border-slate-100 relative group overflow-hidden shadow-sm hover:shadow-md transition">
+                {/* 이미지 영역 (꽉 채우기) */}
+                <div className="w-full h-52 bg-slate-200 relative">
+                  {item.icon_img ? <img src={item.icon_img} alt="icon" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center bg-blue-900/5"><Shield className="w-20 h-20 text-blue-900/20" /></div>}
+                  {isEditMode && <button onClick={() => triggerUpload('about', item.id)} className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition"><Camera size={32}/></button>}
+                </div>
+                {/* 텍스트 영역 */}
+                <div className="p-8 relative">
+                  {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-xl mb-2 bg-white border p-1"/><textarea value={item.description} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full text-sm text-gray-600 bg-white border p-1" rows={3}/><button onClick={() => deleteItem('about_section', item.id, setAboutData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (
+                    <>
+                      <h3 className="text-xl font-bold mb-3 text-gray-900">{item.title}</h3>
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-line text-base">{item.description}</p>
+                    </>
+                  )}
+                </div>
               </div>
             ))}
-            {isEditMode && <button onClick={() => addItem('about_section', { title: '새 항목', description: '내용 입력' }, setAboutData)} className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-500"><Plus size={32}/> 항목 추가</button>}
+            {isEditMode && <button onClick={() => addItem('about_section', { title: '새 항목', description: '내용 입력' }, setAboutData)} className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-500 h-[400px]"><Plus size={32}/> 항목 추가</button>}
           </div>
         </div>
       </section>
 
-      {/* 기술소개 */}
+      {/* [NEW 디자인] 3. 기술소개 (이미지 꽉 채우기) */}
       <section id="about" className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-left mb-16 border-l-4 border-yellow-500 pl-6"><h2 className="text-3xl md:text-4xl font-bold mb-3 text-blue-950">핵심 보유 기술</h2><p className="text-gray-600">공동주택 유지보수에 최적화된 전문 기술을 제공합니다.</p></div>
           <div className="grid md:grid-cols-3 gap-6">
             {serviceData.map((item) => (
-              <div key={item.id} className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm relative">
-                <div className="relative w-fit mb-6">{item.icon_img ? <img src={item.icon_img} alt="icon" className="w-10 h-10 object-contain"/> : <FileCheck className="w-10 h-10 text-yellow-500" />}{isEditMode && <button onClick={() => triggerUpload('service', item.id)} className="absolute -bottom-2 -right-2 bg-black/50 text-white rounded-full p-1"><Camera size={10}/></button>}</div>
-                {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setServiceData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-2xl mb-2 border p-1"/><input type="text" value={item.description} onChange={(e) => setServiceData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full font-medium text-gray-600 mb-4 border p-1"/><textarea value={item.details} onChange={(e) => setServiceData(prev => prev.map(p => p.id === item.id ? { ...p, details: e.target.value } : p))} className="w-full text-sm text-gray-500 border p-1" rows={3}/><button onClick={() => deleteItem('service_section', item.id, setServiceData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (<><h3 className="text-2xl font-bold mb-4 text-gray-900">{item.title}</h3><p className="text-gray-600 mb-6 font-medium">{item.description}</p><ul className="space-y-3 border-t border-gray-100 pt-6">{(item.details || "").split(',').map((d: string, i: number) => <li key={i} className="flex items-center text-sm text-gray-500"><div className="w-1.5 h-1.5 bg-blue-900 rounded-full mr-3"></div>{d}</li>)}</ul></>)}
+              <div key={item.id} className="bg-white rounded-xl border border-gray-100 shadow-sm relative overflow-hidden hover:shadow-md transition">
+                {/* 이미지 영역 (꽉 채우기) */}
+                <div className="w-full h-52 bg-gray-100 relative">
+                   {item.icon_img ? <img src={item.icon_img} alt="icon" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center bg-yellow-500/10"><FileCheck className="w-20 h-20 text-yellow-500/30" /></div>}
+                   {isEditMode && <button onClick={() => triggerUpload('service', item.id)} className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition"><Camera size={32}/></button>}
+                </div>
+                {/* 텍스트 영역 */}
+                <div className="p-8 relative">
+                  {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setServiceData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-2xl mb-2 border p-1"/><input type="text" value={item.description} onChange={(e) => setServiceData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full font-medium text-gray-600 mb-4 border p-1"/><textarea value={item.details} onChange={(e) => setServiceData(prev => prev.map(p => p.id === item.id ? { ...p, details: e.target.value } : p))} className="w-full text-sm text-gray-500 border p-1" rows={3}/><button onClick={() => deleteItem('service_section', item.id, setServiceData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (<><h3 className="text-2xl font-bold mb-4 text-gray-900">{item.title}</h3><p className="text-gray-600 mb-6 font-medium">{item.description}</p><ul className="space-y-3 border-t border-gray-100 pt-6">{(item.details || "").split(',').map((d: string, i: number) => <li key={i} className="flex items-center text-sm text-gray-500"><div className="w-1.5 h-1.5 bg-blue-900 rounded-full mr-3"></div>{d}</li>)}</ul></>)}
+                </div>
               </div>
             ))}
-            {isEditMode && <button onClick={() => addItem('service_section', { title: '새 기술', description: '설명', details: '상세1,상세2' }, setServiceData)} className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-500"><Plus size={32}/> 기술 추가</button>}
+            {isEditMode && <button onClick={() => addItem('service_section', { title: '새 기술', description: '설명', details: '상세1,상세2' }, setServiceData)} className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-500 h-[450px]"><Plus size={32}/> 기술 추가</button>}
           </div>
         </div>
       </section>
@@ -279,16 +308,11 @@ export default function Home() {
            <div className="flex flex-col md:flex-row justify-between gap-6"><div className="space-y-2"><p className="font-bold text-white">{contactInfo.address}</p><p className="text-slate-400">T. {contactInfo.phone} | E. {contactInfo.email}</p></div><div className="text-slate-500 text-xs md:text-right"><p>대표: 이형우 | 사업자등록번호: 000-00-00000</p><p className="mt-1">© 2025 {companyName}. All rights reserved.</p></div></div>
         </div>
         
-        {/* 우측 하단 툴바 (알림 뱃지 추가됨!) */}
+        {/* 우측 하단 툴바 (알림 뱃지 포함) */}
         <div className="fixed bottom-6 right-6 flex gap-3 z-50">
           {isEditMode && (<><button onClick={() => setActiveTab('messages')} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:bg-blue-700 transition"><MessageSquare size={16}/> 상담({consultations.length})</button><button onClick={handleSaveChanges} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:bg-green-700 transition animate-bounce"><Save size={16}/> 저장</button></>)}
           <div className="relative">
-            {/* 상담글이 있으면 빨간 숫자 뱃지 표시 */}
-            {consultations.length > 0 && !isEditMode && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-bounce shadow-md z-10">
-                {consultations.length}
-              </span>
-            )}
+            {consultations.length > 0 && !isEditMode && (<span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-bounce shadow-md z-10">{consultations.length}</span>)}
             <button onClick={toggleEditMode} className={`p-3 rounded-full shadow-xl transition-all hover:scale-110 ${isEditMode ? 'bg-red-500 text-white' : 'bg-slate-800/80 backdrop-blur text-white hover:bg-slate-900'}`}>{isEditMode ? <Lock size={20} /> : <Settings size={20} />}</button>
           </div>
         </div>
