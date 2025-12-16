@@ -1,7 +1,0 @@
-<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#0f172a"/>
-  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#facc15" stroke-width="2" opacity="0.3" rx="20"/>
-  <text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="80" fill="white" letter-spacing="-2">DA기술사사무소</text>
-  <line x1="400" y1="52%" x2="800" y2="52%" stroke="#facc15" stroke-width="4" />
-  <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="40" fill="#facc15" letter-spacing="-1">공동주택 시설물 유지보수 전문</text>
-</svg>

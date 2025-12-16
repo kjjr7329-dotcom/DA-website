@@ -14,8 +14,8 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false); // 로그인 모달 상태
-  const [passwordInput, setPasswordInput] = useState(""); // 비밀번호 입력 상태
+  const [showLoginModal, setShowLoginModal] = useState(false); // 로그인 모달
+  const [passwordInput, setPasswordInput] = useState("");
   const [activeTab, setActiveTab] = useState<'edit' | 'messages'>('edit');
 
   // --- 데이터 상태 ---
@@ -35,7 +35,7 @@ export default function Home() {
   const [portfolioData, setPortfolioData] = useState<any[]>([]);
   const [aboutData, setAboutData] = useState<any[]>([]);
   const [serviceData, setServiceData] = useState<any[]>([]);
-  const [consultations, setConsultations] = useState<any[]>([]);
+  const [consultations, setConsultations] = useState<any[]>([]); // 상담 데이터
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,13 +67,20 @@ export default function Home() {
       const { data: pf } = await supabase.from('portfolio').select('*').order('id'); if (pf) setPortfolioData(pf);
       const { data: ab } = await supabase.from('about_section').select('*').order('sort_order'); if (ab) setAboutData(ab);
       const { data: sv } = await supabase.from('service_section').select('*').order('sort_order'); if (sv) setServiceData(sv);
+      
+      // 상담 내역 불러오기 (알림 배지용)
       fetchConsultations();
     } catch (e) { console.error(e); }
   };
 
+  const fetchConsultations = async () => {
+    const { data } = await supabase.from('consultations').select('*').order('created_at', { ascending: false });
+    if (data) setConsultations(data);
+  };
+
   const handleSaveChanges = async () => {
     if (!infoId) return;
-    if (!window.confirm("모든 변경사항을 저장하시겠습니까?")) return;
+    if (!window.confirm("저장하시겠습니까?")) return;
     try {
       await supabase.from('site_info').update({
         company_name: companyName,
@@ -91,9 +98,9 @@ export default function Home() {
       for (const item of aboutData) await supabase.from('about_section').update({ title: item.title, description: item.description }).eq('id', item.id);
       for (const item of serviceData) await supabase.from('service_section').update({ title: item.title, description: item.description, details: item.details }).eq('id', item.id);
       
-      alert("✅ 모든 섹션이 완벽하게 저장되었습니다!");
+      alert("✅ 저장 완료!");
       setIsEditMode(false);
-    } catch (e) { alert("저장 중 오류 발생: " + e); }
+    } catch (e) { alert("저장 실패: " + e); }
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,26 +125,22 @@ export default function Home() {
 
   const triggerUpload = (type: string, id?: number) => { setUploadTarget({ type, id }); fileInputRef.current?.click(); };
   
-  // [NEW] 관리자 로그인 처리 (모달에서 입력받음)
+  // 로그인 함수
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordInput === "1234") {
       setIsEditMode(true);
       setShowLoginModal(false);
       setPasswordInput("");
-      setActiveTab('edit');
+      setActiveTab('messages'); // 로그인하자마자 메시지함 보여주기
     } else {
-      alert("비밀번호가 일치하지 않습니다.");
+      alert("비밀번호 불일치");
     }
   };
 
-  // [수정됨] 톱니바퀴 클릭 시 -> 옛날 prompt는 삭제하고, 새 모달창만 띄움!
   const toggleEditMode = () => { 
-    if (isEditMode) {
-      setIsEditMode(false); 
-    } else {
-      setShowLoginModal(true); 
-    }
+    if (isEditMode) setIsEditMode(false); 
+    else setShowLoginModal(true); 
   };
 
   const handleConsultSubmit = async (e: React.FormEvent) => { e.preventDefault(); const form = e.target as HTMLFormElement; const { error } = await supabase.from('consultations').insert([{ name: form.name.value, contact: form.contact.value, content: form.content.value }]); if (!error) { alert("신청 완료!"); form.reset(); fetchConsultations(); } };
@@ -149,45 +152,36 @@ export default function Home() {
     <div className="w-full overflow-hidden font-sans text-gray-900 bg-white relative">
       <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
 
-      {/* [NEW] 세련된 관리자 로그인 모달 */}
+      {/* 세련된 로그인 모달 */}
       {showLoginModal && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm relative overflow-hidden animate-scale-in">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-900 to-yellow-500"></div>
-            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition transform hover:rotate-90"><X size={24} /></button>
+            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
             <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-900 shadow-inner">
-                <Lock size={40} />
-              </div>
-              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">관리자 접속</h2>
-              <p className="text-sm text-gray-500 mt-2 font-medium">인가된 사용자만 접근 가능합니다.</p>
+              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-900 shadow-inner"><Lock size={40} /></div>
+              <h2 className="text-3xl font-extrabold text-gray-900">관리자 접속</h2>
             </div>
             <form onSubmit={handleAdminLogin} className="space-y-6">
-              <div>
-                <input 
-                  type="password" 
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="비밀번호를 입력하세요" 
-                  className="w-full px-5 py-4 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-lg placeholder-gray-400"
-                  autoFocus
-                />
-              </div>
-              <button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-900 to-blue-700 text-white font-bold rounded-xl hover:from-blue-800 hover:to-blue-600 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-lg tracking-wide active:scale-95">
-                접속하기 <LogIn size={20} />
-              </button>
+              <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="비밀번호" className="w-full px-5 py-4 border rounded-xl focus:ring-4 focus:ring-blue-100 outline-none text-lg" autoFocus />
+              <button type="submit" className="w-full py-4 bg-blue-900 text-white font-bold rounded-xl hover:bg-blue-800 transition-all shadow-lg flex items-center justify-center gap-3 text-lg">접속하기 <LogIn size={20} /></button>
             </form>
           </div>
         </div>
       )}
 
-      {/* 관리자 패널 (메시지함) */}
+      {/* 관리자 패널 (메시지) */}
       {isEditMode && activeTab === 'messages' && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex justify-end">
           <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 overflow-y-auto animate-slide-in-right">
-             <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold flex items-center gap-2"><MessageSquare/> 상담 내역</h2><button onClick={() => setActiveTab('edit')}>닫기</button></div>
-             {consultations.map((msg) => (
-               <div key={msg.id} className="bg-gray-50 p-4 rounded-lg border mb-3 relative"><div className="font-bold">{msg.name} ({msg.contact})</div><div className="text-sm text-gray-600 my-2">{msg.content}</div><button onClick={() => deleteItem('consultations', msg.id, setConsultations)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></div>
+             <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold flex items-center gap-2"><MessageSquare/> 상담 내역 ({consultations.length})</h2><button onClick={() => setActiveTab('edit')}>닫기</button></div>
+             {consultations.length === 0 ? <p className="text-gray-500 text-center py-10">새로운 상담 내역이 없습니다.</p> : consultations.map((msg) => (
+               <div key={msg.id} className="bg-gray-50 p-4 rounded-lg border mb-3 relative group">
+                 <div className="flex justify-between"><span className="font-bold">{msg.name}</span><span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleDateString()}</span></div>
+                 <div className="text-blue-800 font-bold text-sm my-1">{msg.contact}</div>
+                 <div className="text-sm text-gray-600 bg-white p-2 rounded border">{msg.content}</div>
+                 <button onClick={() => deleteItem('consultations', msg.id, setConsultations)} className="absolute top-2 right-2 text-red-400 hover:text-red-600"><Trash2 size={16}/></button>
+               </div>
              ))}
           </div>
         </div>
@@ -206,24 +200,18 @@ export default function Home() {
         {isMenuOpen && <div className="md:hidden bg-blue-950 border-t border-white/10 p-4 space-y-4 flex flex-col">{['홈', '회사소개', '기술소개', '실적', '상담신청'].map((t, i) => <a key={i} href={`#${['hero', 'services', 'about', 'portfolio', 'contact'][i]}`} onClick={() => setIsMenuOpen(false)} className="hover:text-yellow-400">{t}</a>)}</div>}
       </nav>
 
-      {/* 1. 메인 배너 */}
+      {/* 메인 배너 */}
       <section id="hero" className="relative h-screen flex items-center justify-center bg-blue-900 overflow-hidden">
         <div className={`absolute inset-0 z-0 transition-transform duration-[10s] ease-out ${isVisible ? 'scale-110' : 'scale-100'}`}><img src={heroData.bg} alt="bg" className="w-full h-full object-cover opacity-40"/></div>
         {isEditMode && <button onClick={() => triggerUpload('hero')} className="absolute top-24 right-6 z-30 bg-white/90 text-blue-900 px-4 py-2 rounded-full font-bold shadow-xl flex items-center gap-2 hover:bg-white"><Camera size={18} /> 배경 변경</button>}
         <div className="absolute inset-0 bg-gradient-to-t from-blue-950/80 via-transparent to-transparent z-10"></div>
         <div className={`relative z-20 container mx-auto px-6 text-center text-white transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-          {isEditMode ? (<div className="flex flex-col items-center w-full"><input type="text" value={heroData.badge} onChange={(e) => setHeroData({...heroData, badge: e.target.value})} className="bg-white/90 text-black text-center text-sm font-medium mb-4 rounded px-2 w-64 shadow-lg"/><textarea value={heroData.title} onChange={(e) => setHeroData({...heroData, title: e.target.value})} className="bg-white/90 text-black text-center text-4xl md:text-6xl lg:text-7xl font-bold mb-4 rounded w-full max-w-4xl shadow-lg" rows={2}/><textarea value={heroData.desc} onChange={(e) => setHeroData({...heroData, desc: e.target.value})} className="bg-white/90 text-black text-center text-lg md:text-xl rounded w-full max-w-2xl shadow-lg" rows={3}/></div>) : (
-            <>
-              <div className="inline-block px-4 py-1 border border-yellow-500/50 rounded-full text-yellow-400 text-sm mb-6 animate-pulse font-medium tracking-wider">{heroData.badge}</div>
-              <h1 className="text-3xl md:text-6xl lg:text-7xl font-bold mb-6 whitespace-pre-line leading-tight drop-shadow-lg break-keep">{heroData.title}</h1>
-              <p className="text-lg md:text-xl text-gray-200 mb-10 whitespace-pre-line max-w-2xl mx-auto leading-relaxed break-keep">{heroData.desc}</p>
-            </>
-          )}
+          {isEditMode ? (<div className="flex flex-col items-center w-full"><input type="text" value={heroData.badge} onChange={(e) => setHeroData({...heroData, badge: e.target.value})} className="bg-white/90 text-black text-center text-sm font-medium mb-4 rounded px-2 w-64 shadow-lg"/><textarea value={heroData.title} onChange={(e) => setHeroData({...heroData, title: e.target.value})} className="bg-white/90 text-black text-center text-4xl md:text-6xl lg:text-7xl font-bold mb-4 rounded w-full max-w-4xl shadow-lg" rows={2}/><textarea value={heroData.desc} onChange={(e) => setHeroData({...heroData, desc: e.target.value})} className="bg-white/90 text-black text-center text-lg md:text-xl rounded w-full max-w-2xl shadow-lg" rows={3}/></div>) : (<><div className="inline-block px-4 py-1 border border-yellow-500/50 rounded-full text-yellow-400 text-sm mb-6 animate-pulse font-medium tracking-wider">{heroData.badge}</div><h1 className="text-3xl md:text-6xl lg:text-7xl font-bold mb-6 whitespace-pre-line leading-tight drop-shadow-lg break-keep">{heroData.title}</h1><p className="text-lg md:text-xl text-gray-200 mb-10 whitespace-pre-line max-w-2xl mx-auto leading-relaxed break-keep">{heroData.desc}</p></>)}
           <div className="flex justify-center gap-4 mt-8"><a href="#contact" className="px-8 py-4 bg-yellow-500 text-blue-900 font-bold rounded-lg hover:bg-yellow-400 shadow-xl">무료 상담 신청하기</a></div>
         </div>
       </section>
 
-      {/* 2. 회사소개 */}
+      {/* 회사소개 */}
       <section id="services" className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-left mb-16 border-l-4 border-yellow-500 pl-6"><h2 className="text-3xl md:text-4xl font-bold mb-3 text-blue-950">왜 {companyName}인가?</h2><p className="text-gray-600">법적으로 공인된 최고의 기술 전문가 그룹이 귀하의 자산을 보호합니다.</p></div>
@@ -231,12 +219,7 @@ export default function Home() {
             {aboutData.map((item) => (
               <div key={item.id} className="p-8 bg-slate-50 rounded-2xl border border-slate-100 relative group">
                 <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm mb-6 relative">{item.icon_img ? <img src={item.icon_img} alt="icon" className="w-8 h-8 object-contain"/> : <Shield className="w-7 h-7 text-blue-900" />}{isEditMode && <button onClick={() => triggerUpload('about', item.id)} className="absolute -bottom-2 -right-2 bg-black/50 text-white rounded-full p-1"><Camera size={10}/></button>}</div>
-                {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-xl mb-2 bg-white border p-1"/><textarea value={item.description} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full text-sm text-gray-600 bg-white border p-1" rows={3}/><button onClick={() => deleteItem('about_section', item.id, setAboutData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (
-                  <>
-                    <h3 className="text-xl font-bold mb-3 text-gray-900">{item.title}</h3>
-                    <p className="text-gray-600 leading-relaxed whitespace-pre-line text-base">{item.description}</p>
-                  </>
-                )}
+                {isEditMode ? (<><input type="text" value={item.title} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, title: e.target.value } : p))} className="w-full font-bold text-xl mb-2 bg-white border p-1"/><textarea value={item.description} onChange={(e) => setAboutData(prev => prev.map(p => p.id === item.id ? { ...p, description: e.target.value } : p))} className="w-full text-sm text-gray-600 bg-white border p-1" rows={3}/><button onClick={() => deleteItem('about_section', item.id, setAboutData)} className="absolute top-2 right-2 text-red-400"><Trash2 size={16}/></button></>) : (<><h3 className="text-xl font-bold mb-3 text-gray-900">{item.title}</h3><p className="text-gray-600 leading-relaxed whitespace-pre-line text-base">{item.description}</p></>)}
               </div>
             ))}
             {isEditMode && <button onClick={() => addItem('about_section', { title: '새 항목', description: '내용 입력' }, setAboutData)} className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-2xl text-gray-400 hover:border-blue-500 hover:text-blue-500"><Plus size={32}/> 항목 추가</button>}
@@ -244,7 +227,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. 기술소개 */}
+      {/* 기술소개 */}
       <section id="about" className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-left mb-16 border-l-4 border-yellow-500 pl-6"><h2 className="text-3xl md:text-4xl font-bold mb-3 text-blue-950">핵심 보유 기술</h2><p className="text-gray-600">공동주택 유지보수에 최적화된 전문 기술을 제공합니다.</p></div>
@@ -260,7 +243,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. 실적 */}
+      {/* 실적 */}
       <section id="portfolio" className="py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-6">
           <div className="flex justify-between items-end mb-12"><div className="text-left border-l-4 border-yellow-500 pl-6"><h2 className="text-3xl md:text-4xl font-bold mb-3 text-blue-950">주요 수행 실적</h2><p className="text-gray-600">성공적인 프로젝트 수행 경험이 실력을 증명합니다.</p></div><div className="flex items-center gap-4">{isEditMode && (<button onClick={addPortfolio} className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 shadow-md"><Plus size={18}/> 추가</button>)}<div className="flex gap-2"><button onClick={() => scrollRef.current?.scrollBy({left: -350, behavior: 'smooth'})} className="p-3 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-600"><ChevronLeft/></button><button onClick={() => scrollRef.current?.scrollBy({left: 350, behavior: 'smooth'})} className="p-3 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-600"><ChevronRight/></button></div></div></div>
@@ -275,7 +258,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. 연락처 & 상담 */}
+      {/* 연락처 & 상담 */}
       <section id="contact" className="py-24 bg-blue-900 relative">
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid md:grid-cols-2 gap-16 items-start">
@@ -288,24 +271,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 푸터 */}
+      {/* 푸터 & 툴바 */}
       <footer className="bg-slate-900 text-slate-300 py-12 border-t border-slate-800 text-sm">
         <div className="container mx-auto px-6">
-           <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-             <h2 className="text-2xl font-bold text-white mb-4 md:mb-0">{companyName}</h2>
-             <div className="flex gap-6"><span className="hover:text-white transition cursor-pointer">개인정보처리방침</span><span className="hover:text-white transition cursor-pointer">이용약관</span></div>
-           </div>
+           <div className="flex flex-col md:flex-row justify-between items-center mb-8"><h2 className="text-2xl font-bold text-white mb-4 md:mb-0">{companyName}</h2><div className="flex gap-6"><span className="hover:text-white transition cursor-pointer">개인정보처리방침</span><span className="hover:text-white transition cursor-pointer">이용약관</span></div></div>
            <hr className="border-slate-800 mb-8" />
-           <div className="flex flex-col md:flex-row justify-between gap-6">
-             <div className="space-y-2"><p className="font-bold text-white">{contactInfo.address}</p><p className="text-slate-400">T. {contactInfo.phone} | E. {contactInfo.email}</p></div>
-             <div className="text-slate-500 text-xs md:text-right"><p>대표: 이형우 | 사업자등록번호: 000-00-00000</p><p className="mt-1">© 2025 {companyName}. All rights reserved.</p></div>
-           </div>
+           <div className="flex flex-col md:flex-row justify-between gap-6"><div className="space-y-2"><p className="font-bold text-white">{contactInfo.address}</p><p className="text-slate-400">T. {contactInfo.phone} | E. {contactInfo.email}</p></div><div className="text-slate-500 text-xs md:text-right"><p>대표: 이형우 | 사업자등록번호: 000-00-00000</p><p className="mt-1">© 2025 {companyName}. All rights reserved.</p></div></div>
         </div>
         
-        {/* 우측 하단 툴바 */}
+        {/* 우측 하단 툴바 (알림 뱃지 추가됨!) */}
         <div className="fixed bottom-6 right-6 flex gap-3 z-50">
-          {isEditMode && (<><button onClick={() => setActiveTab('messages')} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:bg-blue-700 transition"><MessageSquare size={16}/> 상담</button><button onClick={handleSaveChanges} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:bg-green-700 transition animate-bounce"><Save size={16}/> 저장</button></>)}
-          <button onClick={toggleEditMode} className={`p-3 rounded-full shadow-xl transition-all hover:scale-110 ${isEditMode ? 'bg-red-500 text-white' : 'bg-slate-800/80 backdrop-blur text-white hover:bg-slate-900'}`}>{isEditMode ? <Lock size={20} /> : <Settings size={20} />}</button>
+          {isEditMode && (<><button onClick={() => setActiveTab('messages')} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:bg-blue-700 transition"><MessageSquare size={16}/> 상담({consultations.length})</button><button onClick={handleSaveChanges} className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-full font-bold shadow-lg hover:bg-green-700 transition animate-bounce"><Save size={16}/> 저장</button></>)}
+          <div className="relative">
+            {/* 상담글이 있으면 빨간 숫자 뱃지 표시 */}
+            {consultations.length > 0 && !isEditMode && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white animate-bounce shadow-md z-10">
+                {consultations.length}
+              </span>
+            )}
+            <button onClick={toggleEditMode} className={`p-3 rounded-full shadow-xl transition-all hover:scale-110 ${isEditMode ? 'bg-red-500 text-white' : 'bg-slate-800/80 backdrop-blur text-white hover:bg-slate-900'}`}>{isEditMode ? <Lock size={20} /> : <Settings size={20} />}</button>
+          </div>
         </div>
       </footer>
     </div>
